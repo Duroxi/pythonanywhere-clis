@@ -9,3 +9,6 @@ build/
 .venv/
 venv/
 .env
+.claude/
+helper_scripts/
+docs/superpowers/
