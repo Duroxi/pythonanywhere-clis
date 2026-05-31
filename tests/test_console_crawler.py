@@ -364,3 +364,72 @@ def test_activate_uses_dynamic_host():
     mock_get.assert_called_once_with(
         "https://eu.pythonanywhere.com/user/testuser/consoles/46955916/frame/"
     )
+
+
+# --- delete tests ---
+
+
+def test_delete_sends_delete_request():
+    """delete sends DELETE request to correct API endpoint with CSRF headers."""
+    crawler = ConsoleCrawler()
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+
+    crawler.session.cookies.set("csrftoken", "test-csrf-token")
+
+    with patch.object(crawler.session, "delete", return_value=mock_resp) as mock_delete:
+        crawler.delete("testuser", 12345)
+
+    mock_delete.assert_called_once()
+    call_args = mock_delete.call_args
+    assert call_args[0][0] == "https://www.pythonanywhere.com/api/v0/user/testuser/consoles/12345/"
+    assert call_args[1]["headers"]["X-CSRFToken"] == "test-csrf-token"
+    assert "testuser/consoles" in call_args[1]["headers"]["Referer"]
+
+
+def test_delete_returns_none():
+    """delete returns None on success (204 No Content)."""
+    crawler = ConsoleCrawler()
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+
+    crawler.session.cookies.set("csrftoken", "test-csrf-token")
+
+    with patch.object(crawler.session, "delete", return_value=mock_resp):
+        result = crawler.delete("testuser", 12345)
+
+    assert result is None
+
+
+def test_delete_raises_on_missing_csrf():
+    """delete raises Exception when CSRF token is missing from cookies."""
+    crawler = ConsoleCrawler()
+
+    with pytest.raises(Exception, match="CSRF token not found"):
+        crawler.delete("testuser", 12345)
+
+
+def test_delete_raises_on_network_error():
+    """delete raises Exception on network failure."""
+    crawler = ConsoleCrawler()
+    crawler.session.cookies.set("csrftoken", "test-csrf-token")
+
+    with patch.object(crawler.session, "delete", side_effect=requests.ConnectionError("timeout")):
+        with pytest.raises(Exception, match="Failed to delete console"):
+            crawler.delete("testuser", 12345)
+
+
+def test_delete_uses_dynamic_host():
+    """delete uses the correct base_url for custom host."""
+    crawler = ConsoleCrawler(host="eu.pythonanywhere.com")
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+
+    crawler.session.cookies.set("csrftoken", "csrf")
+
+    with patch.object(crawler.session, "delete", return_value=mock_resp) as mock_delete:
+        crawler.delete("testuser", 99)
+
+    call_args = mock_delete.call_args
+    assert "eu.pythonanywhere.com" in call_args[0][0]
+    assert "eu.pythonanywhere.com" in call_args[1]["headers"]["Referer"]

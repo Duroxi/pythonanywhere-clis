@@ -72,6 +72,23 @@ class ConsoleCrawler:
 
         return resp.json()
 
+    def delete(self, username: str, console_id: int) -> None:
+        csrftoken = self.session.cookies.get("csrftoken")
+        if not csrftoken:
+            raise Exception("CSRF token not found in session cookies")
+
+        url = f"{self.base_url}/api/v0/user/{username}/consoles/{console_id}/"
+        headers = {
+            "Referer": f"{self.base_url}/user/{username}/consoles/",
+            "X-CSRFToken": csrftoken,
+        }
+
+        try:
+            resp = self.session.delete(url, headers=headers)
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise Exception(f"Failed to delete console: {e}") from e
+
     def activate(self, username: str, console_id: int) -> None:
         frame_url = f"{self.base_url}/user/{username}/consoles/{console_id}/frame/"
 
