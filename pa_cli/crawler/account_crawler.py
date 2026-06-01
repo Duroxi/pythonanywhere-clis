@@ -103,3 +103,31 @@ class AccountCrawler:
             raise Exception(f"Extend request failed: {e}") from e
 
         return extend_resp.status_code in (200, 302)
+
+    def reload_webapp(self, username: str, domain: str) -> bool:
+        webapps_url = f"{self.base_url}/user/{username}/webapps/"
+
+        try:
+            resp = self.session.get(webapps_url)
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise Exception(f"Failed to fetch webapps page: {e}") from e
+
+        csrf_token = self.session.cookies.get("csrftoken")
+        if csrf_token is None:
+            raise Exception("CSRF token not found in cookies")
+
+        reload_url = f"{self.base_url}/user/{username}/webapps/{domain}/reload"
+        headers = {
+            "X-CSRFToken": csrf_token,
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": webapps_url,
+            "Origin": self.base_url,
+        }
+
+        try:
+            reload_resp = self.session.post(reload_url, headers=headers)
+        except requests.RequestException as e:
+            raise Exception(f"Reload request failed: {e}") from e
+
+        return reload_resp.text == "OK"

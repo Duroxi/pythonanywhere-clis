@@ -356,3 +356,137 @@ def test_extend_expiry_raises_on_post_network_error():
          patch.object(crawler.session, "post", side_effect=requests.ConnectionError("timeout")):
         with pytest.raises(Exception, match="Extend request failed"):
             crawler.extend_expiry("testuser")
+
+
+# --- reload_webapp success tests ---
+
+
+def _mock_reload_get_response():
+    """Response for the GET request that fetches the webapps page for CSRF token."""
+    resp = MagicMock()
+    resp.raise_for_status = MagicMock()
+    return resp
+
+
+def _mock_reload_post_response(text="OK", status_code=200):
+    """Response for the POST request to reload the webapp."""
+    resp = MagicMock()
+    resp.text = text
+    resp.raise_for_status = MagicMock()
+    type(resp).status_code = PropertyMock(return_value=status_code)
+    return resp
+
+
+def test_reload_webapp_returns_true_on_success():
+    """reload_webapp returns True when response text is 'OK'."""
+    crawler = AccountCrawler()
+    mock_cookies = MagicMock()
+    mock_cookies.get.return_value = "reload-csrf-token"
+
+    with patch.object(crawler.session, "cookies", mock_cookies), \
+         patch.object(crawler.session, "get", return_value=_mock_reload_get_response()), \
+         patch.object(crawler.session, "post", return_value=_mock_reload_post_response("OK")):
+        result = crawler.reload_webapp("testuser", "testuser.pythonanywhere.com")
+
+    assert result is True
+
+
+def test_reload_webapp_gets_webapps_page():
+    """reload_webapp GETs the webapps page to obtain CSRF token from cookies."""
+    crawler = AccountCrawler()
+    mock_cookies = MagicMock()
+    mock_cookies.get.return_value = "reload-csrf-token"
+
+    with patch.object(crawler.session, "cookies", mock_cookies), \
+         patch.object(crawler.session, "get", return_value=_mock_reload_get_response()) as mock_get, \
+         patch.object(crawler.session, "post", return_value=_mock_reload_post_response("OK")):
+        crawler.reload_webapp("testuser", "testuser.pythonanywhere.com")
+
+    mock_get.assert_called_once_with("https://www.pythonanywhere.com/user/testuser/webapps/")
+
+
+def test_reload_webapp_posts_with_correct_headers():
+    """reload_webapp POSTs with CSRF token, XMLHttpRequest, Referer, and Origin headers."""
+    crawler = AccountCrawler()
+    mock_cookies = MagicMock()
+    mock_cookies.get.return_value = "reload-csrf-token"
+
+    with patch.object(crawler.session, "cookies", mock_cookies), \
+         patch.object(crawler.session, "get", return_value=_mock_reload_get_response()), \
+         patch.object(crawler.session, "post", return_value=_mock_reload_post_response("OK")) as mock_post:
+        crawler.reload_webapp("testuser", "testuser.pythonanywhere.com")
+
+    mock_post.assert_called_once()
+    call_args = mock_post.call_args
+    assert call_args[0][0] == "https://www.pythonanywhere.com/user/testuser/webapps/testuser.pythonanywhere.com/reload"
+    headers = call_args[1]["headers"]
+    assert headers["X-CSRFToken"] == "reload-csrf-token"
+    assert headers["X-Requested-With"] == "XMLHttpRequest"
+    assert headers["Referer"] == "https://www.pythonanywhere.com/user/testuser/webapps/"
+    assert headers["Origin"] == "https://www.pythonanywhere.com"
+
+
+def test_reload_webapp_uses_custom_host():
+    """reload_webapp uses the correct base_url for custom host."""
+    crawler = AccountCrawler(host="eu.pythonanywhere.com")
+    mock_cookies = MagicMock()
+    mock_cookies.get.return_value = "reload-csrf-token"
+
+    with patch.object(crawler.session, "cookies", mock_cookies), \
+         patch.object(crawler.session, "get", return_value=_mock_reload_get_response()) as mock_get, \
+         patch.object(crawler.session, "post", return_value=_mock_reload_post_response("OK")) as mock_post:
+        crawler.reload_webapp("testuser", "testuser.eu.pythonanywhere.com")
+
+    assert "eu.pythonanywhere.com" in mock_get.call_args[0][0]
+    assert "eu.pythonanywhere.com" in mock_post.call_args[0][0]
+
+
+# --- reload_webapp failure tests ---
+
+
+def test_reload_webapp_returns_false_on_non_ok_response():
+    """reload_webapp returns False when response text is not 'OK'."""
+    crawler = AccountCrawler()
+    mock_cookies = MagicMock()
+    mock_cookies.get.return_value = "reload-csrf-token"
+
+    with patch.object(crawler.session, "cookies", mock_cookies), \
+         patch.object(crawler.session, "get", return_value=_mock_reload_get_response()), \
+         patch.object(crawler.session, "post", return_value=_mock_reload_post_response("ERROR", status_code=500)):
+        result = crawler.reload_webapp("testuser", "testuser.pythonanywhere.com")
+
+    assert result is False
+
+
+def test_reload_webapp_raises_on_get_network_error():
+    """reload_webapp raises Exception when fetching webapps page fails."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", side_effect=requests.ConnectionError("timeout")):
+        with pytest.raises(Exception, match="Failed to fetch webapps page"):
+            crawler.reload_webapp("testuser", "testuser.pythonanywhere.com")
+
+
+def test_reload_webapp_raises_on_missing_csrf_token():
+    """reload_webapp raises Exception when CSRF token is not found in cookies."""
+    crawler = AccountCrawler()
+    mock_cookies = MagicMock()
+    mock_cookies.get.return_value = None
+
+    with patch.object(crawler.session, "cookies", mock_cookies), \
+         patch.object(crawler.session, "get", return_value=_mock_reload_get_response()):
+        with pytest.raises(Exception, match="CSRF token not found"):
+            crawler.reload_webapp("testuser", "testuser.pythonanywhere.com")
+
+
+def test_reload_webapp_raises_on_post_network_error():
+    """reload_webapp raises Exception when POST request fails."""
+    crawler = AccountCrawler()
+    mock_cookies = MagicMock()
+    mock_cookies.get.return_value = "reload-csrf-token"
+
+    with patch.object(crawler.session, "cookies", mock_cookies), \
+         patch.object(crawler.session, "get", return_value=_mock_reload_get_response()), \
+         patch.object(crawler.session, "post", side_effect=requests.ConnectionError("timeout")):
+        with pytest.raises(Exception, match="Reload request failed"):
+            crawler.reload_webapp("testuser", "testuser.pythonanywhere.com")
