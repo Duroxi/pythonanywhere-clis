@@ -46,3 +46,59 @@ class AccountCrawler:
             raise Exception(f"Registration request failed: {e}") from e
 
         return "/registration/register/complete/" in register_resp.url
+
+    def get_token(self, username: str) -> str:
+        account_url = f"{self.base_url}/user/{username}/account/"
+
+        try:
+            resp = self.session.get(account_url)
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise Exception(f"Failed to fetch account page: {e}") from e
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for inp in soup.find_all("input"):
+            name = inp.get("name", "")
+            if "token" in name.lower():
+                value = inp.get("value", "")
+                if len(value) >= 32:
+                    return value
+
+        raise Exception("API token not found on account page")
+
+    def refresh(self, username: str) -> bool:
+        webapps_url = f"{self.base_url}/user/{username}/webapps/"
+
+        try:
+            resp = self.session.get(webapps_url)
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise Exception(f"Failed to fetch webapps page: {e}") from e
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        extend_form = None
+        for form in soup.find_all("form"):
+            action = form.get("action", "")
+            if "extend" in action:
+                extend_form = form
+                break
+
+        if extend_form is None:
+            raise Exception("Extend form not found on webapps page")
+
+        csrf_input = extend_form.find("input", {"name": "csrfmiddlewaretoken"})
+        if csrf_input is None:
+            raise Exception("CSRF token not found in extend form")
+
+        extend_url = extend_form["action"]
+        if not extend_url.startswith("http"):
+            extend_url = f"{self.base_url}{extend_url}"
+
+        data = {"csrfmiddlewaretoken": csrf_input["value"]}
+
+        try:
+            extend_resp = self.session.post(extend_url, data=data)
+        except requests.RequestException as e:
+            raise Exception(f"Extend request failed: {e}") from e
+
+        return extend_resp.status_code in (200, 302)
