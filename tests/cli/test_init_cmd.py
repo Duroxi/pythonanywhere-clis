@@ -65,6 +65,7 @@ def test_init_login_failure_shows_error(tmp_path):
     assert result.exit_code == 1
     assert "Login failed" in result.output
     assert "check your username and password" in result.output
+    assert "pa register" in result.output
 
 
 def test_init_login_exception_shows_error(tmp_path):
