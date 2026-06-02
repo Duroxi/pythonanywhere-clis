@@ -188,11 +188,9 @@ def test_register_uses_custom_host():
 # --- get_token success tests ---
 
 ACCOUNT_PAGE_HTML = '''<html><body>
-<form>
-    <input type="hidden" name="csrfmiddlewaretoken" value="test-csrf">
-    <label>API token</label>
-    <input type="text" name="api_token" value="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890">
-</form>
+<div class="tab-pane" id="api_token">
+    <code class="api_token">abcdef1234567890abcdef1234567890abcdef12</code>
+</div>
 </body></html>'''
 
 
@@ -203,7 +201,7 @@ def test_get_token_returns_token_string():
     with patch.object(crawler.session, "get", return_value=_mock_get_response(ACCOUNT_PAGE_HTML)):
         token = crawler.get_token("testuser")
 
-    assert token == "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+    assert token == "abcdef1234567890abcdef1234567890abcdef12"
 
 
 def test_get_token_fetches_account_page():
@@ -751,7 +749,7 @@ def test_get_token_uses_self_username_when_no_param():
         token = crawler.get_token()
 
     mock_get.assert_called_once_with("https://www.pythonanywhere.com/user/configuser/account/")
-    assert token == "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+    assert token == "abcdef1234567890abcdef1234567890abcdef12"
 
 
 def test_get_token_explicit_username_overrides_self():

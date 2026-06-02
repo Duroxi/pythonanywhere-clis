@@ -105,12 +105,11 @@ class AccountCrawler:
             raise Exception(f"Failed to fetch account page: {e}") from e
 
         soup = BeautifulSoup(resp.text, "html.parser")
-        for inp in soup.find_all("input"):
-            name = inp.get("name", "")
-            if "token" in name.lower():
-                value = inp.get("value", "")
-                if len(value) >= 32:
-                    return value
+
+        # Look for <code class="api_token"> element
+        token_elem = soup.find("code", class_="api_token")
+        if token_elem:
+            return token_elem.text.strip()
 
         raise Exception("API token not found on account page")
 
