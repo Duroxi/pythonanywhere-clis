@@ -1,6 +1,7 @@
 import typer
 
 from pa_cli.config import Config
+from pa_cli.crawler.account_crawler import AccountCrawler
 
 app = typer.Typer(help="Configure PythonAnywhere account.")
 
@@ -9,13 +10,25 @@ app = typer.Typer(help="Configure PythonAnywhere account.")
 def init():
     """Interactive setup for PythonAnywhere account."""
     username = typer.prompt("PythonAnywhere username")
-    token = typer.prompt("API Token", hide_input=True)
+    password = typer.prompt("Password", hide_input=True)
     host = typer.prompt("Host", default="www.pythonanywhere.com")
-    password = typer.prompt("Password (optional, press Enter to skip)", default="", hide_input=True)
 
-    save_kwargs = dict(username=username, token=token, host=host)
-    if password:
-        save_kwargs["password"] = password
+    # Save credentials to config first so AccountCrawler can read them
+    Config.save(username=username, password=password, host=host)
 
-    Config.save(**save_kwargs)
-    typer.echo(f"Account '{username}' configured successfully.")
+    # Auto-login and fetch API token
+    try:
+        crawler = AccountCrawler()
+        if crawler.login():
+            token = crawler.get_token()
+            Config.save(token=token)
+            typer.echo(f"Account '{username}' configured successfully.")
+            typer.echo("API token fetched and saved.")
+        else:
+            typer.echo("Login failed. Check your credentials.", err=True)
+            typer.echo("You can register a new account with: pa register", err=True)
+            raise typer.Exit(code=1)
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        typer.echo("You can register a new account with: pa register", err=True)
+        raise typer.Exit(code=1)

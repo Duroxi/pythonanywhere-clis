@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 from typer.testing import CliRunner
 
 from pa_cli.cli.init_cmd import app
@@ -6,30 +6,118 @@ from pa_cli.cli.init_cmd import app
 runner = CliRunner()
 
 
-def test_init_saves_config(tmp_path):
-    config_path = tmp_path / "config.json"
-    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save:
-        result = runner.invoke(app, input="testuser\nabc123\n\n\n")
+def test_init_prompts_username_and_password(tmp_path):
+    """init prompts for username and password, not token."""
+    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = True
+        mock_crawler.get_token.return_value = "test-token-1234"
+        result = runner.invoke(app, input="testuser\nsecret123\n\n")
 
     assert result.exit_code == 0
-    mock_save.assert_called_once_with(username="testuser", token="abc123", host="www.pythonanywhere.com")
+    # Should save username, password, host first
+    mock_save.assert_any_call(username="testuser", password="secret123", host="www.pythonanywhere.com")
 
 
-def test_init_with_password(tmp_path):
-    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save:
-        result = runner.invoke(app, input="testuser\nabc123\n\nsecret\n")
+def test_init_auto_fetches_token_on_login_success(tmp_path):
+    """init calls AccountCrawler.login() and get_token() to auto-fetch token."""
+    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = True
+        mock_crawler.get_token.return_value = "auto-fetched-token-abcdef"
 
-    assert result.exit_code == 0
-    mock_save.assert_called_once_with(
-        username="testuser", token="abc123", host="www.pythonanywhere.com", password="secret"
-    )
-
-
-def test_init_without_password(tmp_path):
-    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save:
-        result = runner.invoke(app, input="testuser\nabc123\n\n\n")
+        result = runner.invoke(app, input="testuser\nsecret123\n\n")
 
     assert result.exit_code == 0
-    mock_save.assert_called_once_with(
-        username="testuser", token="abc123", host="www.pythonanywhere.com"
-    )
+    # Should call login and get_token
+    mock_crawler.login.assert_called_once()
+    mock_crawler.get_token.assert_called_once()
+    # Should save the auto-fetched token
+    mock_save.assert_any_call(token="auto-fetched-token-abcdef")
+
+
+def test_init_shows_success_message_with_token(tmp_path):
+    """init shows success message indicating token was fetched."""
+    with patch("pa_cli.cli.init_cmd.Config.save"), \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = True
+        mock_crawler.get_token.return_value = "token-xyz"
+
+        result = runner.invoke(app, input="testuser\nsecret123\n\n")
+
+    assert result.exit_code == 0
+    assert "configured successfully" in result.output
+    assert "token" in result.output.lower()
+
+
+def test_init_login_failure_suggests_register(tmp_path):
+    """init shows error and suggests pa register when login fails."""
+    with patch("pa_cli.cli.init_cmd.Config.save"), \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = False
+
+        result = runner.invoke(app, input="testuser\nsecret123\n\n")
+
+    assert result.exit_code == 1
+    assert "pa register" in result.output
+
+
+def test_init_login_exception_suggests_register(tmp_path):
+    """init shows error and suggests pa register when login raises exception."""
+    with patch("pa_cli.cli.init_cmd.Config.save"), \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.side_effect = Exception("Network error")
+
+        result = runner.invoke(app, input="testuser\nsecret123\n\n")
+
+    assert result.exit_code == 1
+    assert "pa register" in result.output
+
+
+def test_init_saves_config_before_login(tmp_path):
+    """init saves username/password/host to config before attempting login."""
+    call_order = []
+    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_save.side_effect = lambda **kwargs: call_order.append(("save", kwargs))
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.side_effect = lambda: call_order.append("login") or True
+        mock_crawler.get_token.return_value = "token"
+
+        runner.invoke(app, input="testuser\nsecret123\n\n")
+
+    # Config.save must be called before login
+    assert call_order[0][0] == "save"
+    assert call_order[1] == "login"
+
+
+def test_init_uses_custom_host(tmp_path):
+    """init passes custom host to Config.save."""
+    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = True
+        mock_crawler.get_token.return_value = "token"
+
+        result = runner.invoke(app, input="testuser\nsecret123\neu.pythonanywhere.com\n")
+
+    assert result.exit_code == 0
+    mock_save.assert_any_call(username="testuser", password="secret123", host="eu.pythonanywhere.com")
+
+
+def test_init_no_token_prompt_in_input(tmp_path):
+    """init does not prompt for API token."""
+    with patch("pa_cli.cli.init_cmd.Config.save"), \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = True
+        mock_crawler.get_token.return_value = "token"
+
+        result = runner.invoke(app, input="testuser\nsecret123\n\n")
+
+    assert "API Token" not in result.output
