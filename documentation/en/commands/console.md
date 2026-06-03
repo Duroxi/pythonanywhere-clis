@@ -2,6 +2,17 @@
 
 Console management commands for creating, operating, and managing remote consoles on PythonAnywhere.
 
+## Command List
+
+| Command | Description | Auth |
+|---------|-------------|------|
+| `pa console list` | List all consoles | Token |
+| `pa console create` | Create new console | Token |
+| `pa console send <id> <cmd>` | Send command and get output | Token |
+| `pa console kill <id>` | Kill console | Token |
+| `pa console activate <id>` | Activate console | Password |
+| `pa console get-or-create` | Smart get or create | Password |
+
 ---
 
 ## pa console list
@@ -14,16 +25,11 @@ List all consoles for the current account.
 pa console list
 ```
 
-### Description
-
-Retrieves all consoles via the REST API, displaying each console's ID and name.
-
 ### Examples
 
 ```bash
 $ pa console list
-ID: 12345, Name: Bash
-ID: 12346, Name: Python 3.10
+ID: 46955916, Name: Bash console 46955916
 ```
 
 **When no consoles exist:**
@@ -38,12 +44,15 @@ No consoles found.
 **API authentication failed:**
 
 ```bash
+$ pa console list
 Error: API error 401: Invalid token.
 ```
 
+**Solution**: Run `pa account token` to re-fetch token.
+
 ### Prerequisites
 
-- Must run `pa init` first to complete account configuration
+- Must run `pa init` first
 
 ---
 
@@ -61,41 +70,44 @@ pa console create [--executable <executable>]
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--executable` | `bash` | Console executable, e.g., `bash`, `python3.10` |
+| `--executable` | `bash` | Console executable, e.g. `bash`, `python3.10` |
 
 ### Examples
 
-**Create a default Bash console:**
+**Create default Bash console:**
 
 ```bash
 $ pa console create
-Console created: id=12347, executable=bash
+Console created: id=46991591, executable=bash
 ```
 
-**Create a Python console:**
+**Create Python console:**
 
 ```bash
 $ pa console create --executable python3.10
-Console created: id=12348, executable=python3.10
+Console created: id=46991592, executable=python3.10
 ```
 
 ### Error Scenarios
 
-**Console limit exceeded:**
+**Console limit exceeded (free tier max 2):**
 
 ```bash
+$ pa console create
 Error: API error 400: You have too many consoles.
 ```
 
+**Solution**: Kill a console first with `pa console kill <id>`.
+
 ### Prerequisites
 
-- Must run `pa init` first to complete account configuration
+- Must run `pa init` first
 
 ---
 
 ## pa console send
 
-Send a command to a console and retrieve the output.
+Send a command to console and get output.
 
 ### Syntax
 
@@ -105,74 +117,66 @@ pa console send <console_id> <command> [--wait/--no-wait]
 
 ### Parameters
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `console_id` | Yes | Console ID (obtainable via `pa console list`) |
-| `command` | Yes | The command to send |
+| Parameter | Description |
+|-----------|-------------|
+| `console_id` | Console ID |
+| `command` | Command to execute |
 
 ### Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--wait`, `-w` | Enabled | Wait for command output (waits approximately 1 second before retrieving output) |
-| `--no-wait`, `-W` | - | Return immediately after sending, without waiting for output |
-
-### Description
-
-- A newline character `\n` is automatically appended to the command
-- In `--wait` mode, the command waits approximately 1 second after sending before retrieving output
-- The `send_input` endpoint has an API rate limit of 120 requests/minute (higher than the standard 40 requests/minute)
+| `--wait` | True | Wait and get output |
+| `--no-wait` | - | Send command without waiting |
 
 ### Examples
 
-**Send a command and wait for output:**
+**Send command and get output:**
 
 ```bash
-$ pa console send 12345 "ls -la"
-total 32
-drwxr-xr-x 5 user user 4096 May 30 10:00 .
-drwxr-xr-x 3 user user 4096 May 30 09:00 ..
--rw-r--r-- 1 user user  220 May 30 10:00 app.py
+$ pa console send 46955916 "echo hello"
+16:16 ~ $ echo hello
+hello
+16:16 ~ $
 ```
 
-**Send a command without waiting for output:**
+**Send command without waiting:**
 
 ```bash
-$ pa console send 12345 "pip install flask" --no-wait
-Sent to console 12345: pip install flask
-```
-
-**Execute Python code:**
-
-```bash
-$ pa console send 12346 "print(2 + 3)"
-5
+$ pa console send 46955916 "long-running-command" --no-wait
 ```
 
 ### Error Scenarios
 
-**Console does not exist:**
+**Console not started:**
 
 ```bash
-Error: API error 404: Console not found.
+$ pa console send 46955916 "ls"
+Error: API error 412: Console not yet started.
 ```
 
-**No output:**
+**Solution**: Run `pa console activate 46955916` first.
+
+**Console not found:**
 
 ```bash
-(no output)
+$ pa console send 99999 "ls"
+Error: API error 404: Not found.
 ```
+
+**Solution**: Run `pa console list` to see available consoles.
 
 ### Prerequisites
 
-- Must run `pa init` first to complete account configuration
-- Requires an existing console (created via `pa console create` or `pa console get-or-create`)
+- Must run `pa init` first
+- Must create console first (`pa console create` or `pa console get-or-create`)
+- If console not started, run `pa console activate <id>` first
 
 ---
 
 ## pa console kill
 
-Terminate a console.
+Kill a console.
 
 ### Syntax
 
@@ -182,34 +186,35 @@ pa console kill <console_id>
 
 ### Parameters
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `console_id` | Yes | Console ID |
+| Parameter | Description |
+|-----------|-------------|
+| `console_id` | Console ID |
 
 ### Examples
 
 ```bash
-$ pa console kill 12345
-Console 12345 killed.
+$ pa console kill 46991591
+Console 46991591 killed.
 ```
 
 ### Error Scenarios
 
-**Console does not exist:**
+**Console not found:**
 
 ```bash
-Error: API error 404: Console not found.
+$ pa console kill 99999
+Error: API error 404: Not found.
 ```
 
 ### Prerequisites
 
-- Must run `pa init` first to complete account configuration
+- Must run `pa init` first
 
 ---
 
 ## pa console activate
 
-Activate a console via WebSocket.
+Activate a console via WebSocket. This command uses crawler to simulate browser behavior and start the console process.
 
 ### Syntax
 
@@ -219,140 +224,143 @@ pa console activate <console_id>
 
 ### Parameters
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `console_id` | Yes | Console ID |
+| Parameter | Description |
+|-----------|-------------|
+| `console_id` | Console ID |
 
 ### Description
 
-This command activates a console by simulating browser operations via the crawler. It retrieves the console's WebSocket connection information from the frame page and establishes a connection. The activation process includes:
-1. Accessing the console frame page
-2. Parsing WebSocket parameters from the page
-3. Establishing a WebSocket connection and sending initialization messages
-
-This command requires a stored password (Session authentication) because it simulates browser login.
+PythonAnywhere consoles need to be opened in a browser once before they can be used via API. This command simulates opening the console page in a browser to start the console process.
 
 ### Examples
 
 ```bash
-$ pa console activate 12345
-Console 12345 activated successfully.
+$ pa console activate 46955916
+Console 46955916 activated successfully.
 ```
 
 ### Error Scenarios
 
-**Password not stored:**
+**Password not configured:**
 
 ```bash
-$ pa console activate 12345
-Password not found. Run 'pa account login' first.
+$ pa console activate 46955916
+Error: Password not found. Run 'pa account login' first.
 ```
+
+**Solution**: Run `pa account login` to store password.
 
 **Login failed:**
 
 ```bash
-Error: Login failed
+$ pa console activate 46955916
+Error: Login failed. Please check your username and password.
 ```
 
-**Page structure change causing parse failure:**
-
-```bash
-Error: Could not parse WebSocket info from frame page
-```
-
-**WebSocket connection failed:**
-
-```bash
-Error: WebSocket connection failed: Connection refused
-```
+**Solution**: Check username and password in config file.
 
 ### Prerequisites
 
-- Must run `pa init` first to complete account configuration
-- Must run `pa account login` first to store the password
+- Must run `pa init` first
+- Config file must have password (entered during `pa init`, or later with `pa account login`)
 
 ---
 
 ## pa console get-or-create
 
-Get an existing console, or create a new one if none are available.
+Smart get or create console. This command automatically manages console lifecycle.
 
 ### Syntax
 
 ```bash
-pa console get-or-create [-e <executable> | --executable <executable>]
+pa console get-or-create [--executable <executable>]
 ```
 
 ### Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `-e`, `--executable` | `bash` | Console executable |
+| `--executable` / `-e` | `bash` | Console executable |
 
-### Description
+### Logic
 
-This command automatically manages the console lifecycle:
-1. Lists existing consoles
-2. If consoles exist, returns the ID of the first one
-3. If 2 or more consoles exist, deletes the oldest one and creates a new one
-4. If no consoles exist, creates a new one
-
-This command requires a stored password (Session authentication) because it performs operations via the crawler.
+1. List existing consoles
+2. If available console exists, return its ID (reuse)
+3. If at limit (2), delete oldest and create new
+4. If no consoles, create new
 
 ### Examples
 
-**Get or create a default console:**
-
 ```bash
 $ pa console get-or-create
-Console ready: 12345
+Console ready: 46955916
 ```
 
-**Specify an executable:**
+**With custom executable:**
 
 ```bash
 $ pa console get-or-create -e python3.10
-Console ready: 12346
+Console ready: 46991592
 ```
 
 ### Error Scenarios
 
-**Password not stored:**
+**Password not configured:**
 
 ```bash
 $ pa console get-or-create
-Password not found. Run 'pa account login' first.
+Error: Password not found. Run 'pa account login' first.
 ```
+
+**Solution**: Run `pa account login` to store password.
 
 ### Prerequisites
 
-- Must run `pa init` first to complete account configuration
-- Must run `pa account login` first to store the password
+- Must run `pa init` first
+- Config file must have password
 
 ---
 
-## Typical Workflows
+## Typical Workflow
 
-### Execute Remote Commands
+### Complete console usage flow
 
 ```bash
-# Create or get a console
-pa console get-or-create
+# 1. List existing consoles
+$ pa console list
+ID: 46955916, Name: Bash console 46955916
 
-# List consoles to get the ID
-pa console list
+# 2. Activate console (if just created or not started)
+$ pa console activate 46955916
+Console 46955916 activated successfully.
 
-# Send commands
-pa console send 12345 "cd /home/myuser && ls"
+# 3. Send command
+$ pa console send 46955916 "ls -la"
+total 8
+drwxr-xr-x 2 user user 4096 Jun  3 16:16 .
+drwxr-xr-x 3 user user 4096 Jun  3 16:16 ..
+-rw-r--r-- 1 user user   18 Jun  3 16:16 README.txt
 
-# Terminate when done
-pa console kill 12345
+# 4. Clean up
+$ pa console kill 46955916
+Console 46955916 killed.
 ```
 
-### Install Python Dependencies
+### Simplified flow with get-or-create
 
 ```bash
-pa console create --executable python3.10
-pa console send 12346 "import pip; pip.main(['install', 'flask', 'requests'])"
-pa console kill 12346
+# Auto get or create console
+$ pa console get-or-create
+Console ready: 46955916
+
+# Use directly (if console already activated)
+$ pa console send 46955916 "echo hello"
+hello
+
+# If console not activated, activate first
+$ pa console activate 46955916
+Console 46955916 activated successfully.
+
+$ pa console send 46955916 "echo hello"
+hello
 ```

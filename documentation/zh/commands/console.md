@@ -2,6 +2,17 @@
 
 控制台管理相关的命令，用于在 PythonAnywhere 上创建、操作和管理远程控制台。
 
+## 命令列表
+
+| 命令 | 说明 | 认证方式 |
+|------|------|---------|
+| `pa console list` | 列出所有 console | Token |
+| `pa console create` | 创建新 console | Token |
+| `pa console send <id> <cmd>` | 发送命令并获取输出 | Token |
+| `pa console kill <id>` | 销毁 console | Token |
+| `pa console activate <id>` | 激活 console | 密码 |
+| `pa console get-or-create` | 智能获取或创建 | 密码 |
+
 ---
 
 ## pa console list
@@ -14,16 +25,11 @@
 pa console list
 ```
 
-### 说明
-
-通过 REST API 获取所有控制台列表，显示每个控制台的 ID 和名称。
-
 ### 示例
 
 ```bash
 $ pa console list
-ID: 12345, Name: Bash
-ID: 12346, Name: Python 3.10
+ID: 46955916, Name: Bash console 46955916
 ```
 
 **无控制台时：**
@@ -38,8 +44,11 @@ No consoles found.
 **API 认证失败：**
 
 ```bash
+$ pa console list
 Error: API error 401: Invalid token.
 ```
+
+**解决方案**：运行 `pa account token` 重新获取 token。
 
 ### 前置条件
 
@@ -69,23 +78,26 @@ pa console create [--executable <executable>]
 
 ```bash
 $ pa console create
-Console created: id=12347, executable=bash
+Console created: id=46991591, executable=bash
 ```
 
 **创建 Python 控制台：**
 
 ```bash
 $ pa console create --executable python3.10
-Console created: id=12348, executable=python3.10
+Console created: id=46991592, executable=python3.10
 ```
 
 ### 错误场景
 
-**超出控制台数量限制：**
+**超出控制台数量限制（免费用户最多 2 个）：**
 
 ```bash
+$ pa console create
 Error: API error 400: You have too many consoles.
 ```
+
+**解决方案**：先用 `pa console kill <id>` 销毁一个 console。
 
 ### 前置条件
 
@@ -105,74 +117,66 @@ pa console send <console_id> <command> [--wait/--no-wait]
 
 ### 参数
 
-| 参数 | 必填 | 说明 |
-|------|------|------|
-| `console_id` | 是 | 控制台 ID（可通过 `pa console list` 获取） |
-| `command` | 是 | 要发送的命令 |
+| 参数 | 说明 |
+|------|------|
+| `console_id` | 控制台 ID |
+| `command` | 要执行的命令 |
 
 ### 选项
 
 | 选项 | 默认值 | 说明 |
 |------|--------|------|
-| `--wait`, `-w` | 启用 | 等待命令输出（等待约 1 秒后获取输出） |
-| `--no-wait`, `-W` | - | 发送后立即返回，不等待输出 |
-
-### 说明
-
-- 命令发送后自动追加换行符 `\n`
-- `--wait` 模式下，发送命令后等待约 1 秒获取输出
-- `send_input` 端点的 API 频率限制为 120 次/分钟（高于标准端点的 40 次/分钟）
+| `--wait` | True | 等待并获取输出 |
+| `--no-wait` | - | 只发送命令，不等待输出 |
 
 ### 示例
 
-**发送命令并等待输出：**
+**发送命令并获取输出：**
 
 ```bash
-$ pa console send 12345 "ls -la"
-total 32
-drwxr-xr-x 5 user user 4096 May 30 10:00 .
-drwxr-xr-x 3 user user 4096 May 30 09:00 ..
--rw-r--r-- 1 user user  220 May 30 10:00 app.py
+$ pa console send 46955916 "echo hello"
+16:16 ~ $ echo hello
+hello
+16:16 ~ $
 ```
 
-**发送命令不等待输出：**
+**只发送命令，不等待：**
 
 ```bash
-$ pa console send 12345 "pip install flask" --no-wait
-Sent to console 12345: pip install flask
-```
-
-**执行 Python 代码：**
-
-```bash
-$ pa console send 12346 "print(2 + 3)"
-5
+$ pa console send 46955916 "long-running-command" --no-wait
 ```
 
 ### 错误场景
 
-**控制台不存在：**
+**Console 未启动：**
 
 ```bash
-Error: API error 404: Console not found.
+$ pa console send 46955916 "ls"
+Error: API error 412: Console not yet started.
 ```
 
-**无输出时：**
+**解决方案**：先运行 `pa console activate 46955916` 激活 console。
+
+**Console 不存在：**
 
 ```bash
-(no output)
+$ pa console send 99999 "ls"
+Error: API error 404: Not found.
 ```
+
+**解决方案**：运行 `pa console list` 查看可用的 console。
 
 ### 前置条件
 
 - 需先运行 `pa init` 完成账户配置
-- 需要一个已存在的控制台（通过 `pa console create` 或 `pa console get-or-create` 创建）
+- 需先创建 console（`pa console create` 或 `pa console get-or-create`）
+- 如果 console 未启动，需先运行 `pa console activate <id>`
 
 ---
 
 ## pa console kill
 
-终止一个控制台。
+销毁一个控制台。
 
 ### 语法
 
@@ -182,23 +186,24 @@ pa console kill <console_id>
 
 ### 参数
 
-| 参数 | 必填 | 说明 |
-|------|------|------|
-| `console_id` | 是 | 控制台 ID |
+| 参数 | 说明 |
+|------|------|
+| `console_id` | 控制台 ID |
 
 ### 示例
 
 ```bash
-$ pa console kill 12345
-Console 12345 killed.
+$ pa console kill 46991591
+Console 46991591 killed.
 ```
 
 ### 错误场景
 
-**控制台不存在：**
+**Console 不存在：**
 
 ```bash
-Error: API error 404: Console not found.
+$ pa console kill 99999
+Error: API error 404: Not found.
 ```
 
 ### 前置条件
@@ -209,7 +214,7 @@ Error: API error 404: Console not found.
 
 ## pa console activate
 
-通过 WebSocket 激活控制台。
+通过 WebSocket 激活控制台。此命令使用爬虫模拟浏览器行为来启动 console 进程。
 
 ### 语法
 
@@ -219,140 +224,143 @@ pa console activate <console_id>
 
 ### 参数
 
-| 参数 | 必填 | 说明 |
-|------|------|------|
-| `console_id` | 是 | 控制台 ID |
+| 参数 | 说明 |
+|------|------|
+| `console_id` | 控制台 ID |
 
 ### 说明
 
-此命令通过爬虫模拟浏览器操作，获取控制台的 WebSocket 连接信息并建立连接以激活控制台。激活操作包括：
-1. 访问控制台 frame 页面
-2. 解析页面中的 WebSocket 参数
-3. 建立 WebSocket 连接并发送初始化消息
-
-此命令需要存储密码（Session 认证），因为需要模拟浏览器登录。
+PythonAnywhere 的 console 需要先在浏览器中打开一次才能通过 API 使用。此命令模拟浏览器打开 console 页面，启动 console 进程。
 
 ### 示例
 
 ```bash
-$ pa console activate 12345
-Console 12345 activated successfully.
+$ pa console activate 46955916
+Console 46955916 activated successfully.
 ```
 
 ### 错误场景
 
-**密码未存储：**
+**密码未配置：**
 
 ```bash
-$ pa console activate 12345
-Password not found. Run 'pa account login' first.
+$ pa console activate 46955916
+Error: Password not found. Run 'pa account login' first.
 ```
+
+**解决方案**：运行 `pa account login` 存储密码。
 
 **登录失败：**
 
 ```bash
-Error: Login failed
+$ pa console activate 46955916
+Error: Login failed. Please check your username and password.
 ```
 
-**页面结构变更导致解析失败：**
-
-```bash
-Error: Could not parse WebSocket info from frame page
-```
-
-**WebSocket 连接失败：**
-
-```bash
-Error: WebSocket connection failed: Connection refused
-```
+**解决方案**：检查配置文件中的用户名和密码是否正确。
 
 ### 前置条件
 
 - 需先运行 `pa init` 完成账户配置
-- 需先运行 `pa account login` 存储密码
+- 配置文件中需要有密码（`pa init` 时输入，或之后用 `pa account login` 存储）
 
 ---
 
 ## pa console get-or-create
 
-获取一个现有的控制台，如果没有可用的则创建新控制台。
+智能获取或创建控制台。此命令会自动管理 console 生命周期。
 
 ### 语法
 
 ```bash
-pa console get-or-create [-e <executable> | --executable <executable>]
+pa console get-or-create [--executable <executable>]
 ```
 
 ### 选项
 
 | 选项 | 默认值 | 说明 |
 |------|--------|------|
-| `-e`, `--executable` | `bash` | 控制台可执行程序 |
+| `--executable` / `-e` | `bash` | 控制台可执行程序 |
 
-### 说明
+### 逻辑
 
-此命令自动管理控制台生命周期：
-1. 列出现有控制台
-2. 如果已有控制台，返回第一个控制台的 ID
-3. 如果已有 2 个或更多控制台，删除最早的控制台后创建新控制台
-4. 如果没有控制台，创建一个新的
-
-此命令需要存储密码（Session 认证），因为需要通过爬虫进行操作。
+1. 列出现有 consoles
+2. 如果有可用的 console，返回其 ID（复用）
+3. 如果达到上限（2 个），删除最旧的，创建新的
+4. 如果没有 console，创建新的
 
 ### 示例
 
-**获取或创建默认控制台：**
-
 ```bash
 $ pa console get-or-create
-Console ready: 12345
+Console ready: 46955916
 ```
 
-**指定可执行程序：**
+**使用自定义 executable：**
 
 ```bash
 $ pa console get-or-create -e python3.10
-Console ready: 12346
+Console ready: 46991592
 ```
 
 ### 错误场景
 
-**密码未存储：**
+**密码未配置：**
 
 ```bash
 $ pa console get-or-create
-Password not found. Run 'pa account login' first.
+Error: Password not found. Run 'pa account login' first.
 ```
+
+**解决方案**：运行 `pa account login` 存储密码。
 
 ### 前置条件
 
 - 需先运行 `pa init` 完成账户配置
-- 需先运行 `pa account login` 存储密码
+- 配置文件中需要有密码
 
 ---
 
-## 典型工作流
+## 典型工作流程
 
-### 执行远程命令
+### 完整的 console 使用流程
 
 ```bash
-# 创建或获取控制台
-pa console get-or-create
+# 1. 查看现有 consoles
+$ pa console list
+ID: 46955916, Name: Bash console 46955916
 
-# 查看控制台列表获取 ID
-pa console list
+# 2. 激活 console（如果刚创建或未启动）
+$ pa console activate 46955916
+Console 46955916 activated successfully.
 
-# 发送命令
-pa console send 12345 "cd /home/myuser && ls"
+# 3. 发送命令
+$ pa console send 46955916 "ls -la"
+total 8
+drwxr-xr-x 2 user user 4096 Jun  3 16:16 .
+drwxr-xr-x 3 user user 4096 Jun  3 16:16 ..
+-rw-r--r-- 1 user user   18 Jun  3 16:16 README.txt
 
-# 用完后终止
-pa console kill 12345
+# 4. 用完后销毁
+$ pa console kill 46955916
+Console 46955916 killed.
 ```
 
-### 安装 Python 依赖
+### 使用 get-or-create 简化流程
 
 ```bash
-pa console create --executable python3.10
-pa console send 12346 "import pip; pip.main(['install', 'flask', 'requests'])"
-pa console kill 12346
+# 自动获取或创建 console
+$ pa console get-or-create
+Console ready: 46955916
+
+# 直接使用（如果 console 已激活）
+$ pa console send 46955916 "echo hello"
+hello
+
+# 如果 console 未激活，先激活
+$ pa console activate 46955916
+Console 46955916 activated successfully.
+
+$ pa console send 46955916 "echo hello"
+hello
 ```

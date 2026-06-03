@@ -10,6 +10,7 @@
 - [账号配置](#账号配置)
 - [第一个项目部署](#第一个项目部署)
 - [常用命令速查](#常用命令速查)
+- [命令依赖关系](#命令依赖关系)
 - [常见问题](#常见问题)
 
 ---
@@ -22,6 +23,8 @@ pythonanywhere-cli 是一个命令行工具，用于自动化管理 PythonAnywhe
 - **无需浏览器** - 所有操作通过命令行完成，适合脚本和 AI Agent 调用
 - **免费套餐友好** - 专为 PythonAnywhere 免费用户设计
 
+---
+
 ## 环境要求
 
 | 要求 | 版本 |
@@ -30,13 +33,15 @@ pythonanywhere-cli 是一个命令行工具，用于自动化管理 PythonAnywhe
 | 操作系统 | Windows / macOS / Linux |
 | 网络 | 需要能访问 pythonanywhere.com |
 
+---
+
 ## 安装
 
 ### 方式一：从源码安装（推荐）
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/pythonanywhere-cli.git
+git clone https://github.com/Duroxi/pythonanywhere-cli.git
 cd pythonanywhere-cli
 
 # 安装（开发模式）
@@ -52,13 +57,27 @@ pip install typer requests beautifulsoup4 websocket-client
 ### 验证安装
 
 ```bash
-pa --version
-```
+$ pa --help
 
-预期输出：
+ Usage: pa [OPTIONS] COMMAND [ARGS]...
 
-```
-pa, version 0.1.0
+ CLI tool for automating PythonAnywhere deployments.
+
+┌─ Options ───────────────────────────────────────────────────────────────────┐
+│ --install-completion          Install completion for the current shell.     │
+│ --show-completion             Show completion for the current shell, to     │
+│                               copy it or customize the installation.        │
+│ --help                        Show this message and exit.                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+┌─ Commands ──────────────────────────────────────────────────────────────────┐
+│ init       Configure PythonAnywhere account                                 │
+│ files      Manage files on PythonAnywhere                                   │
+│ console    Manage consoles on PythonAnywhere                                │
+│ webapp     Manage web apps on PythonAnywhere                                │
+│ deploy     Deploy a local project to PythonAnywhere                         │
+│ account    Account management                                               │
+│ register   Register a new PythonAnywhere account                            │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -70,59 +89,42 @@ pa, version 0.1.0
 如果你还没有 PythonAnywhere 账号，可以通过命令行注册：
 
 ```bash
-pa register
+$ pa register
+Username (letters and numbers only): myusername
+Email: myemail@example.com
+Password: ********
+Confirm password: ********
+Account 'myusername' registered successfully!
+Please check your email to verify your account.
+Then run: pa init
 ```
-
-按照提示输入：
-- 邮箱地址
-- 用户名
-- 密码
-
-注册成功后，你会收到一封确认邮件。
 
 > **提示**：如果你已有账号，跳过此步。
 
 ### 第二步：初始化配置
 
 ```bash
-pa init
-```
-
-交互式配置过程：
-
-```
-请输入 PythonAnywhere 用户名: yourusername
-正在获取 API Token...
-配置已保存到 ~/.pa-cli/config.json
+$ pa init
+PythonAnywhere username: myusername
+Password: ********
+Host [www.pythonanywhere.com]:
+Account 'myusername' configured successfully.
+API token fetched and saved.
 ```
 
 `pa init` 会自动完成以下操作：
-1. 保存你的用户名
-2. 自动从 PythonAnywhere 获取 API Token
-3. 将配置写入 `~/.pa-cli/config.json`
-
-### 配置文件说明
-
-配置保存在 `~/.pa-cli/config.json`：
-
-```json
-{
-  "accounts": [
-    {
-      "username": "yourusername",
-      "token": "your-api-token",
-      "host": "www.pythonanywhere.com"
-    }
-  ],
-  "default_account": "yourusername"
-}
-```
+1. 保存你的用户名和密码
+2. 登录 PythonAnywhere
+3. 从账号页面获取 API Token
+4. 保存所有信息到 `~/.pa-cli/config.json`
 
 ---
 
 ## 第一个项目部署
 
-假设你有一个简单的 Flask 项目，目录结构如下：
+### 准备项目文件
+
+创建一个简单的 Flask 项目：
 
 ```
 my-site/
@@ -134,14 +136,13 @@ my-site/
 
 ```python
 from flask import Flask
-
 app = Flask(__name__)
 
-@app.route("/")
+@app.route('/')
 def hello():
-    return "Hello from PythonAnywhere!"
+    return 'Hello from PythonAnywhere!'
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run()
 ```
 
@@ -154,54 +155,16 @@ flask
 ### 一键部署
 
 ```bash
-pa deploy ./my-site
+$ pa deploy ./my-site
+Uploading ./my-site to /home/myusername/my-site...
+Uploaded 2 files.
+Setting up environment...
+Creating webapp myusername.pythonanywhere.com...
+Reloading webapp...
+Deployed successfully! Visit: https://myusername.pythonanywhere.com
 ```
 
-部署过程输出：
-
-```
-[1/5] 上传文件到 /home/yourusername/my-site...
-  上传 app.py
-  上传 requirements.txt
-  上传完成
-
-[2/5] 创建虚拟环境...
-  python3.10 -m venv /home/yourusername/my-site/.venv
-  安装依赖...
-  成功
-
-[3/5] 创建 Web 应用...
-  域名: yourusername.pythonanywhere.com
-  Python 版本: python3.10
-  成功
-
-[4/5] 配置 Web 应用...
-  源码目录: /home/yourusername/my-site
-  虚拟环境: /home/yourusername/my-site/.venv
-  成功
-
-[5/5] 重载 Web 应用...
-  成功
-
-========================================
-部署成功！
-访问地址: https://yourusername.pythonanywhere.com
-========================================
-```
-
-### 验证部署
-
-在浏览器中打开 `https://yourusername.pythonanywhere.com`，应该看到：
-
-```
-Hello from PythonAnywhere!
-```
-
-### 指定自定义域名
-
-```bash
-pa deploy ./my-site --domain mysite.pythonanywhere.com
-```
+部署完成后，访问 `https://myusername.pythonanywhere.com` 即可看到你的网站。
 
 ---
 
@@ -209,101 +172,131 @@ pa deploy ./my-site --domain mysite.pythonanywhere.com
 
 ### 账号管理
 
-| 命令 | 说明 |
-|------|------|
-| `pa init` | 初始化/更新账号配置 |
-| `pa register` | 注册新账号 |
-| `pa account login` | 保存密码（用于爬虫操作） |
-| `pa account extend` | 延长免费账号有效期 |
+```bash
+pa init                    # 初始化配置（自动获取 token）
+pa register                # 注册新账号
+pa account login           # 存储密码
+pa account token           # 获取 API token
+pa account extend          # 延长免费账号有效期
+```
 
 ### 部署
 
-| 命令 | 说明 |
-|------|------|
-| `pa deploy <目录>` | 一键部署到默认域名 |
-| `pa deploy <目录> --domain <域名>` | 部署到指定域名 |
+```bash
+pa deploy ./my-site                    # 部署到默认域名
+pa deploy ./my-site --domain custom    # 部署到自定义域名
+```
 
 ### 文件管理
 
-| 命令 | 说明 |
-|------|------|
-| `pa files upload <本地路径> <远程路径>` | 上传单个文件 |
-| `pa files upload <本地路径> <远程路径> -r` | 递归上传目录 |
+```bash
+pa files upload ./index.html /home/user/site/index.html      # 上传单个文件
+pa files upload ./static /home/user/site/static -r            # 上传目录
+```
 
-### Web 应用管理
+### Console 管理
 
-| 命令 | 说明 |
-|------|------|
-| `pa webapp reload <域名>` | 重载 Web 应用 |
-| `pa webapp hits <域名>` | 查看访问统计 |
-| `pa webapp config <域名> --source-dir <路径>` | 设置源码目录 |
-| `pa webapp config <域名> --virtualenv <路径>` | 设置虚拟环境路径 |
+```bash
+pa console list                      # 列出所有 console
+pa console create                    # 创建新 console
+pa console send 12345 "ls -la"       # 发送命令并获取输出
+pa console activate 12345            # 激活 console
+pa console get-or-create             # 智能获取或创建
+pa console kill 12345                # 销毁 console
+```
 
-### 控制台管理
+### Webapp 管理
 
-| 命令 | 说明 |
-|------|------|
-| `pa console list` | 列出所有控制台 |
-| `pa console create` | 创建新控制台 |
-| `pa console send <id> <命令>` | 发送命令并获取输出 |
-| `pa console kill <id>` | 终止控制台 |
+```bash
+pa webapp create mysite.pythonanywhere.com                    # 创建 webapp
+pa webapp config mysite --source-dir /home/user/mysite        # 配置源码目录
+pa webapp static mysite --url /static/ --path static          # 添加静态映射
+pa webapp reload mysite.pythonanywhere.com                    # 重载 webapp
+pa webapp hits mysite.pythonanywhere.com                      # 查看访问统计
+```
+
+---
+
+## 命令依赖关系
+
+某些命令需要先完成前置操作：
+
+| 命令 | 前置条件 | 说明 |
+|------|---------|------|
+| `pa deploy` | `pa init` | 需要 API token |
+| `pa files upload` | `pa init` | 需要 API token |
+| `pa console create/list/send/kill` | `pa init` | 需要 API token |
+| `pa webapp create/config/static/reload` | `pa init` | 需要 API token |
+| `pa account token/extend` | `pa init` | 需要密码（自动从配置读取） |
+| `pa console activate/get-or-create` | `pa init` | 需要密码（自动从配置读取） |
+| `pa webapp hits/reload-crawler` | `pa init` | 需要密码（自动从配置读取） |
+
+**简单来说**：运行 `pa init` 后，所有命令都可以使用。
 
 ---
 
 ## 常见问题
 
-### Q: `pa init` 报错 "无法获取 API Token"
+### 1. API Token 错误
 
-**原因**：可能是网络问题或 PythonAnywhere 会话过期。
-
-**解决**：
-1. 确认能访问 pythonanywhere.com
-2. 手动获取 Token：登录 PythonAnywhere → Account → API Token → 生成新 Token
-3. 手动编辑配置文件 `~/.pa-cli/config.json`
-
-### Q: 部署后访问网站显示 500 错误
-
-**原因**：通常是应用代码错误或依赖未正确安装。
-
-**解决**：
-```bash
-# 查看错误日志
-pa webapp logs yourusername.pythonanywhere.com
-
-# 检查虚拟环境是否正确配置
-pa webapp config yourusername.pythonanywhere.com --virtualenv /home/yourusername/my-site/.venv
+**错误信息**：
+```
+Exception: API error 401: Invalid token.
 ```
 
-### Q: 免费账号有什么限制？
-
-- CPU 时间有限（每天几秒）
-- 没有 SSH 访问（这正是本工具存在的意义）
-- 只能创建一个 Web 应用
-- 自动过期（每 3 个月需要续期）
-
-续期命令：
+**解决方案**：
 ```bash
-pa account extend
+pa account token    # 重新获取 token
 ```
 
-### Q: 如何更新已部署的项目？
+### 2. 密码未配置
 
-再次运行部署命令即可：
-
-```bash
-pa deploy ./my-site
+**错误信息**：
+```
+Password not found in config. Run 'pa account login' to store it.
 ```
 
-这会重新上传文件并重载应用。
+**解决方案**：
+```bash
+pa account login    # 存储密码
+```
 
-### Q: 支持哪些 Python 版本？
+### 3. Console 未启动
 
-PythonAnywhere 支持 Python 3.10、3.11、3.12。默认使用 3.10，可在创建 Web 应用时指定。
+**错误信息**：
+```
+Exception: API error 412: Console not yet started.
+```
+
+**解决方案**：
+```bash
+pa console list         # 获取 console ID
+pa console activate 12345   # 激活 console
+```
+
+### 4. 免费账号限制
+
+免费账号限制：
+- 最多 1 个 web app
+- 最多 2 个 console
+- 每月 100 秒 CPU 时间
+
+### 5. 网络连接问题
+
+**错误信息**：
+```
+ConnectionError: ('Connection aborted.', RemoteDisconnected(...))
+```
+
+**解决方案**：
+- 检查网络连接
+- 确认能访问 pythonanywhere.com
+- 稍后重试
 
 ---
 
 ## 下一步
 
-- 阅读 [README.md](../README.md) 了解完整命令列表
-- 查看 [PRD 文档](../docs/prd-mvp.md) 了解技术细节
-- 提交 Issue 或 PR 参与项目开发
+- [命令参考](commands/) - 查看所有命令的详细文档
+- [架构设计](architecture.md) - 了解项目内部结构
+- [GitHub 仓库](https://github.com/Duroxi/pythonanywhere-cli) - 查看源码
