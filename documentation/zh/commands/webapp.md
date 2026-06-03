@@ -234,7 +234,7 @@ Webapp myuser.pythonanywhere.com reloaded successfully.
 **密码未存储：**
 
 ```bash
-Password not found. Run 'pa account login' first.
+Error: Password not found in config. Run 'pa account login' to store it.
 ```
 
 **登录失败：**
@@ -292,7 +292,7 @@ Hit statistics for myuser.pythonanywhere.com:
 **密码未存储：**
 
 ```bash
-Password not found. Run 'pa account login' first.
+Error: Password not found in config. Run 'pa account login' to store it.
 ```
 
 **登录失败：**

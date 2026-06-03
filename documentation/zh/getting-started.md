@@ -161,7 +161,8 @@ Uploaded 2 files.
 Setting up environment...
 Creating webapp myusername.pythonanywhere.com...
 Reloading webapp...
-Deployed successfully! Visit: https://myusername.pythonanywhere.com
+
+Deployed! Visit: https://myusername.pythonanywhere.com
 ```
 
 部署完成后，访问 `https://myusername.pythonanywhere.com` 即可看到你的网站。

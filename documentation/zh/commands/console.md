@@ -126,8 +126,8 @@ pa console send <console_id> <command> [--wait/--no-wait]
 
 | 选项 | 默认值 | 说明 |
 |------|--------|------|
-| `--wait` | True | 等待并获取输出 |
-| `--no-wait` | - | 只发送命令，不等待输出 |
+| `--wait` / `-w` | True | 等待并获取输出 |
+| `--no-wait` / `-W` | - | 只发送命令，不等待输出 |
 
 ### 示例
 
@@ -245,7 +245,7 @@ Console 46955916 activated successfully.
 
 ```bash
 $ pa console activate 46955916
-Error: Password not found. Run 'pa account login' first.
+Password not found. Run 'pa account login' first.
 ```
 
 **解决方案**：运行 `pa account login` 存储密码。
@@ -309,7 +309,7 @@ Console ready: 46991592
 
 ```bash
 $ pa console get-or-create
-Error: Password not found. Run 'pa account login' first.
+Password not found. Run 'pa account login' first.
 ```
 
 **解决方案**：运行 `pa account login` 存储密码。

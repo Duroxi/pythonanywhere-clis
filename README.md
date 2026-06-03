@@ -161,7 +161,7 @@ pytest -v
 pytest tests/test_account_crawler.py
 ```
 
-**Test coverage:** 167 tests passing
+**Test coverage:** 154 tests passing
 
 ## Roadmap
 

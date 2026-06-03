@@ -250,9 +250,6 @@ Crawler 模块通过模拟浏览器行为来补充 API 的不足：
 ```bash
 # 初始化配置（交互式）
 pa init
-
-# 指定账户操作
-pa --account work_account files ls /home/work_account/
 ```
 
 ### 5.5 实现细节
@@ -427,7 +424,7 @@ def setup_project(username, token, host, project_name):
 ### 7.2 账户注册流程
 
 ```
-用户执行: pa register --username newuser --email user@example.com
+用户执行: pa register
 
     ┌─────────────────────────────────────────────────────────────┐
     │                   AccountCrawler.register()                 │
@@ -456,7 +453,7 @@ def setup_project(username, token, host, project_name):
 | HTML 解析 | BeautifulSoup4 | 解析 Web 页面、提取 CSRF Token |
 | WebSocket | websocket-client | 控制台 WebSocket 连接 |
 | 配置存储 | JSON | 本地配置文件 |
-| 最低 Python | 3.8+ | 使用 `str | None` 类型语法需 3.10+ |
+| 最低 Python | 3.10+ | 使用 `str | None` 类型语法 |
 
 ---
 

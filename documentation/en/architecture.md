@@ -250,9 +250,6 @@ Does this operation have a REST API?
 ```bash
 # Initialize configuration (interactive)
 pa init
-
-# Specify account for operations
-pa --account work_account files ls /home/work_account/
 ```
 
 ### 5.5 Implementation Details
@@ -427,7 +424,7 @@ User executes: pa deploy ./myproject myusername.pythonanywhere.com
 ### 7.2 Account Registration Flow
 
 ```
-User executes: pa register --username newuser --email user@example.com
+User executes: pa register
 
     ┌─────────────────────────────────────────────────────────────┐
     │                   AccountCrawler.register()                 │
@@ -456,7 +453,7 @@ User executes: pa register --username newuser --email user@example.com
 | HTML Parsing | BeautifulSoup4 | Parse web pages, extract CSRF Tokens |
 | WebSocket | websocket-client | Console WebSocket connection |
 | Config Storage | JSON | Local configuration file |
-| Minimum Python | 3.8+ | `str | None` type syntax requires 3.10+ |
+| Minimum Python | 3.10+ | `str | None` type syntax |
 
 ---
 

@@ -161,7 +161,8 @@ Uploaded 2 files.
 Setting up environment...
 Creating webapp myusername.pythonanywhere.com...
 Reloading webapp...
-Deployed successfully! Visit: https://myusername.pythonanywhere.com
+
+Deployed! Visit: https://myusername.pythonanywhere.com
 ```
 
 After deployment, visit `https://myusername.pythonanywhere.com` to see your website.

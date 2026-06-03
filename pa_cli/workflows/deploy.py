@@ -102,5 +102,4 @@ def deploy(
     webapps_client.reload(username, domain)
 
     url = f"https://{domain}"
-    print(f"Deployed successfully! {url}")
     return url
