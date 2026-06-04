@@ -199,3 +199,37 @@ def test_switch_command_exits_on_nonexistent_user():
 
     assert result.exit_code == 1
     assert "nobody" in result.output
+
+
+# --- remove command tests ---
+
+
+def test_remove_command_deletes_account():
+    """remove command deletes the specified account."""
+    with patch("pa_cli.cli.account_cmd.Config.remove") as mock_remove:
+        mock_remove.return_value = None
+        result = runner.invoke(app, ["remove", "user2"])
+
+    assert result.exit_code == 0
+    mock_remove.assert_called_once_with("user2")
+    assert "Removed account 'user2'" in result.output
+
+
+def test_remove_command_shows_new_default_when_removing_current():
+    """remove command shows new default when removing the current default account."""
+    with patch("pa_cli.cli.account_cmd.Config.remove") as mock_remove:
+        mock_remove.return_value = "user1"
+        result = runner.invoke(app, ["remove", "user2"])
+
+    assert result.exit_code == 0
+    assert "Switched to account 'user1'" in result.output
+
+
+def test_remove_command_exits_on_nonexistent_user():
+    """remove command exits with error when account not found."""
+    with patch("pa_cli.cli.account_cmd.Config.remove") as mock_remove:
+        mock_remove.side_effect = ValueError("Account 'nobody' not found in config.")
+        result = runner.invoke(app, ["remove", "nobody"])
+
+    assert result.exit_code == 1
+    assert "nobody" in result.output

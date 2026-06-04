@@ -19,6 +19,21 @@ def switch(
         raise typer.Exit(code=1)
 
 
+@app.command()
+def remove(
+    username: str = typer.Argument(..., help="Username to remove"),
+):
+    """Remove an account from config."""
+    try:
+        new_default = Config.remove(username)
+        typer.echo(f"Removed account '{username}'.")
+        if new_default:
+            typer.echo(f"Switched to account '{new_default}'.")
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
 @app.command("list")
 def list_accounts():
     """List all configured accounts."""
