@@ -14,6 +14,38 @@ def main():
     pass
 
 
+def _resolve_path(path: str | None, username: str) -> str:
+    """Resolve remote path. Relative paths are under /home/{username}/."""
+    if not path:
+        return f"/home/{username}/"
+    if path.startswith("/"):
+        return path if path.endswith("/") else path + "/"
+    return f"/home/{username}/{path}".rstrip("/") + "/"
+
+
+@app.command("ls")
+def ls(
+    path: str = typer.Argument(None, help="Remote path to list (default: home directory)"),
+):
+    """List files and directories on PythonAnywhere."""
+    account = Config.load(verbose=True)
+    client = FilesClient(token=account["token"], host=account["host"])
+
+    remote_path = _resolve_path(path, account["username"])
+    items = client.list(account["username"], remote_path)
+
+    if not items:
+        typer.echo("(empty directory)")
+        return
+
+    for name in sorted(items.keys()):
+        item_type = items[name].get("type", "file")
+        if item_type == "directory":
+            typer.echo(f"  {name}/")
+        else:
+            typer.echo(f"  {name}")
+
+
 @app.command()
 def upload(
     local_path: str = typer.Argument(..., help="Local file or directory path"),
