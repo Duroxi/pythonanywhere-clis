@@ -167,3 +167,76 @@ def test_set_default_raises_for_nonexistent_user(tmp_path):
             assert False, "Should have raised ValueError"
         except ValueError:
             pass
+
+
+def test_remove_account(tmp_path):
+    config_path = tmp_path / "config.json"
+    config_data = {
+        "accounts": [
+            {"username": "user1", "token": "t1", "host": "h1"},
+            {"username": "user2", "token": "t2", "host": "h2"},
+        ],
+        "default_account": "user1",
+    }
+    config_path.write_text(json.dumps(config_data))
+
+    with patch("pa_cli.config.CONFIG_PATH", config_path):
+        Config.remove("user2")
+
+    data = json.loads(config_path.read_text())
+    assert len(data["accounts"]) == 1
+    assert data["accounts"][0]["username"] == "user1"
+    assert data["default_account"] == "user1"
+
+
+def test_remove_default_account_switches_to_first_remaining(tmp_path):
+    config_path = tmp_path / "config.json"
+    config_data = {
+        "accounts": [
+            {"username": "user1", "token": "t1", "host": "h1"},
+            {"username": "user2", "token": "t2", "host": "h2"},
+        ],
+        "default_account": "user1",
+    }
+    config_path.write_text(json.dumps(config_data))
+
+    with patch("pa_cli.config.CONFIG_PATH", config_path):
+        new_default = Config.remove("user1")
+
+    data = json.loads(config_path.read_text())
+    assert len(data["accounts"]) == 1
+    assert data["default_account"] == "user2"
+    assert new_default == "user2"
+
+
+def test_remove_last_account_clears_default(tmp_path):
+    config_path = tmp_path / "config.json"
+    config_data = {
+        "accounts": [{"username": "user1", "token": "t1", "host": "h1"}],
+        "default_account": "user1",
+    }
+    config_path.write_text(json.dumps(config_data))
+
+    with patch("pa_cli.config.CONFIG_PATH", config_path):
+        new_default = Config.remove("user1")
+
+    data = json.loads(config_path.read_text())
+    assert len(data["accounts"]) == 0
+    assert data["default_account"] == ""
+    assert new_default is None
+
+
+def test_remove_raises_for_nonexistent_user(tmp_path):
+    config_path = tmp_path / "config.json"
+    config_data = {
+        "accounts": [{"username": "user1", "token": "t1", "host": "h1"}],
+        "default_account": "user1",
+    }
+    config_path.write_text(json.dumps(config_data))
+
+    with patch("pa_cli.config.CONFIG_PATH", config_path):
+        try:
+            Config.remove("nobody")
+            assert False, "Should have raised ValueError"
+        except ValueError:
+            pass

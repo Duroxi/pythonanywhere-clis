@@ -95,3 +95,22 @@ class Config:
             raise ValueError(f"Account '{username}' not found in config.")
         data["default_account"] = username
         CONFIG_PATH.write_text(json.dumps(data, indent=2))
+
+    @staticmethod
+    def remove(username: str) -> str | None:
+        if not CONFIG_PATH.exists():
+            raise FileNotFoundError(f"Config not found. Run 'pa init' first.")
+        data = json.loads(CONFIG_PATH.read_text())
+        found = [i for i, a in enumerate(data.get("accounts", [])) if a["username"] == username]
+        if not found:
+            raise ValueError(f"Account '{username}' not found in config.")
+        data["accounts"].pop(found[0])
+        new_default = None
+        if data["default_account"] == username:
+            if data["accounts"]:
+                data["default_account"] = data["accounts"][0]["username"]
+                new_default = data["default_account"]
+            else:
+                data["default_account"] = ""
+        CONFIG_PATH.write_text(json.dumps(data, indent=2))
+        return new_default
