@@ -176,3 +176,26 @@ def test_list_command_empty():
 
     assert result.exit_code == 0
     assert "No accounts configured" in result.output
+
+
+# --- switch command tests ---
+
+
+def test_switch_command_changes_default():
+    """switch command changes default account."""
+    with patch("pa_cli.cli.account_cmd.Config.set_default") as mock_set:
+        result = runner.invoke(app, ["switch", "user2"])
+
+    assert result.exit_code == 0
+    mock_set.assert_called_once_with("user2")
+    assert "Switched to account 'user2'" in result.output
+
+
+def test_switch_command_exits_on_nonexistent_user():
+    """switch command exits with error when account not found."""
+    with patch("pa_cli.cli.account_cmd.Config.set_default") as mock_set:
+        mock_set.side_effect = ValueError("Account 'nobody' not found in config.")
+        result = runner.invoke(app, ["switch", "nobody"])
+
+    assert result.exit_code == 1
+    assert "nobody" in result.output

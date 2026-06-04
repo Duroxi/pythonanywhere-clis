@@ -6,6 +6,19 @@ from pa_cli.crawler.account_crawler import AccountCrawler
 app = typer.Typer(help="Account management commands.")
 
 
+@app.command()
+def switch(
+    username: str = typer.Argument(..., help="Username to switch to"),
+):
+    """Switch the default account."""
+    try:
+        Config.set_default(username)
+        typer.echo(f"Switched to account '{username}'.")
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
 @app.command("list")
 def list_accounts():
     """List all configured accounts."""
