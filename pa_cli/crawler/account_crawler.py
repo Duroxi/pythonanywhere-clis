@@ -113,6 +113,55 @@ class AccountCrawler:
 
         raise Exception("API token not found on account page")
 
+    def create_token(self, username: str | None = None) -> str:
+        """Create a new API token via the account page form."""
+        resolved = username or self.username
+        account_url = f"{self.base_url}/user/{resolved}/account/"
+
+        try:
+            resp = self.session.get(account_url)
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise Exception(f"Failed to fetch account page: {e}") from e
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        form = soup.find("form", action=lambda a: a and "new_token" in a)
+        if form is None:
+            raise Exception("Token creation form not found on account page")
+
+        csrf_input = form.find("input", {"name": "csrfmiddlewaretoken"})
+        if csrf_input is None:
+            raise Exception("CSRF token not found in token creation form")
+
+        post_url = form["action"]
+        if not post_url.startswith("http"):
+            post_url = f"{self.base_url}{post_url}"
+
+        data = {"csrfmiddlewaretoken": csrf_input["value"]}
+        headers = {"Referer": account_url}
+
+        try:
+            post_resp = self.session.post(post_url, data=data, headers=headers)
+        except requests.RequestException as e:
+            raise Exception(f"Token creation request failed: {e}") from e
+
+        if post_resp.status_code not in (200, 302):
+            raise Exception(f"Token creation failed: HTTP {post_resp.status_code}")
+
+        # Re-fetch account page to read the newly created token
+        try:
+            resp2 = self.session.get(account_url)
+            resp2.raise_for_status()
+        except requests.RequestException as e:
+            raise Exception(f"Failed to fetch account page after token creation: {e}") from e
+
+        soup2 = BeautifulSoup(resp2.text, "html.parser")
+        token_elem = soup2.find("code", class_="api_token")
+        if token_elem:
+            return token_elem.text.strip()
+
+        raise Exception("Token created but could not be read from account page")
+
     def extend_expiry(self, username: str | None = None) -> bool:
         resolved = username or self.username
         webapps_url = f"{self.base_url}/user/{resolved}/webapps/"

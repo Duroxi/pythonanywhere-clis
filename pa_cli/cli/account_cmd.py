@@ -65,17 +65,29 @@ def login():
 
 
 @app.command()
-def token():
-    """Get API token by logging in via crawler."""
+def token(
+    revoke: bool = typer.Option(False, "--revoke", "-r", help="Revoke current token and create a new one"),
+):
+    """Get API token. Creates one automatically if none exists. Use --revoke to force refresh."""
     try:
         crawler = AccountCrawler()
         if not crawler.login():
             typer.echo("Login failed. Check your credentials.", err=True)
             raise typer.Exit(code=1)
-        new_token = crawler.get_token()
-        Config.save(token=new_token)
-        typer.echo(f"API token: {new_token}")
-        typer.echo("Token saved to config.")
+
+        if revoke:
+            new_token = crawler.create_token()
+            Config.save(token=new_token)
+            typer.echo(f"Token revoked. New token: {new_token}")
+        else:
+            try:
+                existing = crawler.get_token()
+                Config.save(token=existing)
+                typer.echo(f"API token: {existing}")
+            except Exception:
+                new_token = crawler.create_token()
+                Config.save(token=new_token)
+                typer.echo(f"Token created: {new_token}")
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(code=1)

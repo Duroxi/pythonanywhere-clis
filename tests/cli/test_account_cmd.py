@@ -29,8 +29,8 @@ def test_login_uses_hidden_input():
 # --- token command tests ---
 
 
-def test_token_command_logs_in_and_gets_token():
-    """token command creates crawler, logs in, gets token, and saves it."""
+def test_token_command_shows_existing_token():
+    """token command shows existing token and saves it."""
     with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
         mock_crawler.login.return_value = True
@@ -41,10 +41,44 @@ def test_token_command_logs_in_and_gets_token():
             result = runner.invoke(app, ["token"])
 
     assert result.exit_code == 0
-    mock_crawler.login.assert_called_once()
     mock_crawler.get_token.assert_called_once()
     mock_save.assert_called_once_with(token="abc123token")
     assert "abc123token" in result.output
+
+
+def test_token_command_creates_token_when_none_exists():
+    """token command auto-creates token when get_token fails."""
+    with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
+        mock_crawler = MagicMock()
+        mock_crawler.login.return_value = True
+        mock_crawler.get_token.side_effect = Exception("API token not found")
+        mock_crawler.create_token.return_value = "newtoken456"
+        mock_cls.return_value = mock_crawler
+
+        with patch("pa_cli.cli.account_cmd.Config.save") as mock_save:
+            result = runner.invoke(app, ["token"])
+
+    assert result.exit_code == 0
+    mock_crawler.create_token.assert_called_once()
+    mock_save.assert_called_once_with(token="newtoken456")
+    assert "newtoken456" in result.output
+
+
+def test_token_command_revoke_creates_new_token():
+    """token command with --revoke forces token creation."""
+    with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
+        mock_crawler = MagicMock()
+        mock_crawler.login.return_value = True
+        mock_crawler.create_token.return_value = "revoked_new_token"
+        mock_cls.return_value = mock_crawler
+
+        with patch("pa_cli.cli.account_cmd.Config.save") as mock_save:
+            result = runner.invoke(app, ["token", "--revoke"])
+
+    assert result.exit_code == 0
+    mock_crawler.create_token.assert_called_once()
+    mock_save.assert_called_once_with(token="revoked_new_token")
+    assert "revoked_new_token" in result.output
 
 
 def test_token_command_exits_on_login_failure():
