@@ -40,6 +40,11 @@ pa deploy ./my-site
 
 | Command | Description | Auth |
 |---------|-------------|------|
+| `pa files ls [path]` | List remote directory contents | Token |
+| `pa files download <remote> [local]` | Download a file | Token |
+| `pa files download <remote> [local] -r` | Download directory recursively | Token |
+| `pa files rm <path>` | Delete a remote file | Token |
+| `pa files rm <path> -r` | Delete directory recursively | Token |
 | `pa files upload <local> <remote>` | Upload a single file | Token |
 | `pa files upload <local> <remote> -r` | Upload directory recursively | Token |
 
@@ -175,7 +180,7 @@ pytest -v
 pytest tests/test_account_crawler.py
 ```
 
-**Test coverage:** 154 tests passing
+**Test coverage:** 206 tests passing
 
 ## Roadmap
 
