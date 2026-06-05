@@ -108,6 +108,56 @@ def test_ls_absolute_path():
     assert call_args[0] == ("testuser", "/home/other/")
 
 
+def test_download_single_file(tmp_path):
+    """download command downloads a single file."""
+    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
+        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.list.return_value = {"test.txt": {"type": "file"}}
+            mock_client.download.return_value = b"file content"
+            mock_client_cls.return_value = mock_client
+            local_file = tmp_path / "downloaded.txt"
+            result = runner.invoke(app, ["download", "test.txt", str(local_file)])
+    assert result.exit_code == 0
+    assert "Downloaded" in result.output
+    assert local_file.read_bytes() == b"file content"
+
+
+def test_download_requires_recursive_for_dir():
+    """download command requires -r for directories."""
+    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
+        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.list.return_value = {"mysite": {"type": "directory"}}
+            mock_client_cls.return_value = mock_client
+            result = runner.invoke(app, ["download", "mysite"])
+    assert result.exit_code == 1
+    assert "recursive" in result.output.lower()
+
+
+def test_download_recursive_directory(tmp_path):
+    """download -r downloads entire directory."""
+    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
+        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.list.side_effect = [
+                {"mysite": {"type": "directory"}},
+                {"app.py": {"type": "file"}, "static": {"type": "directory"}},
+                {"style.css": {"type": "file"}},
+            ]
+            mock_client.download.return_value = b"content"
+            mock_client_cls.return_value = mock_client
+            local_dir = tmp_path / "downloaded"
+            result = runner.invoke(app, ["download", "mysite", str(local_dir), "-r"])
+    assert result.exit_code == 0
+    assert "Downloaded" in result.output
+    assert (local_dir / "app.py").exists()
+    assert (local_dir / "static" / "style.css").exists()
+
+
 def test_upload_shows_account_hint(tmp_path):
     """upload command shows current account in output."""
     local_file = tmp_path / "test.txt"
@@ -128,3 +178,72 @@ def test_upload_shows_account_hint(tmp_path):
 
     assert result.exit_code == 0
     assert "[account: testuser]" in result.output
+
+
+def test_rm_file():
+    """rm command deletes a file after confirmation."""
+    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
+        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.list.return_value = {"old.txt": {"type": "file"}}
+            mock_client_cls.return_value = mock_client
+            result = runner.invoke(app, ["rm", "old.txt"], input="y\n")
+    assert result.exit_code == 0
+    assert "Deleted old.txt" in result.output
+    mock_client.delete.assert_called_once()
+
+
+def test_rm_file_force():
+    """rm -f skips confirmation."""
+    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
+        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.list.return_value = {"old.txt": {"type": "file"}}
+            mock_client_cls.return_value = mock_client
+            result = runner.invoke(app, ["rm", "old.txt", "-f"])
+    assert result.exit_code == 0
+    assert "Deleted" in result.output
+    mock_client.delete.assert_called_once()
+
+
+def test_rm_cancelled():
+    """rm cancels when user says no."""
+    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
+        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.list.return_value = {"old.txt": {"type": "file"}}
+            mock_client_cls.return_value = mock_client
+            result = runner.invoke(app, ["rm", "old.txt"], input="n\n")
+    assert "Cancelled" in result.output
+    mock_client.delete.assert_not_called()
+
+
+def test_rm_directory_requires_recursive():
+    """rm requires -r for directories."""
+    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
+        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.list.return_value = {"olddir": {"type": "directory"}}
+            mock_client_cls.return_value = mock_client
+            result = runner.invoke(app, ["rm", "olddir"])
+    assert result.exit_code == 1
+    assert "recursive" in result.output.lower()
+
+
+def test_rm_directory_recursive():
+    """rm -rf deletes directory."""
+    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
+        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.list.return_value = {"olddir": {"type": "directory"}}
+            mock_client_cls.return_value = mock_client
+            result = runner.invoke(app, ["rm", "olddir", "-r", "-f"])
+    assert result.exit_code == 0
+    assert "Deleted olddir" in result.output
+    assert "recursive" in result.output
+    mock_client.delete.assert_called_once()
