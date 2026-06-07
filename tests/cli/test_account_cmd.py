@@ -91,7 +91,7 @@ def test_token_command_exits_on_login_failure():
         result = runner.invoke(app, ["token"])
 
     assert result.exit_code == 1
-    assert "incorrect" in result.output.lower()
+    assert "Login failed" in result.output
 
 
 def test_token_command_exits_on_login_exception():
@@ -136,7 +136,7 @@ def test_extend_command_exits_on_login_failure():
         result = runner.invoke(app, ["extend"])
 
     assert result.exit_code == 1
-    assert "incorrect" in result.output.lower()
+    assert "Login failed" in result.output
 
 
 def test_extend_command_exits_on_extend_failure():

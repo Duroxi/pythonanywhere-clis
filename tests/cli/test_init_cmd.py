@@ -63,7 +63,7 @@ def test_init_login_failure_shows_error(tmp_path):
         result = runner.invoke(app, input="testuser\nsecret123\n\n")
 
     assert result.exit_code == 1
-    assert "incorrect" in result.output.lower()
+    assert "Login failed" in result.output
 
 
 def test_init_login_exception_shows_error(tmp_path):

@@ -107,7 +107,7 @@ def test_hits_command_exits_on_login_failure():
         result = runner.invoke(app, ["hits", "u.pythonanywhere.com"])
 
     assert result.exit_code == 1
-    assert "incorrect" in result.output.lower()
+    assert "Login failed" in result.output
 
 
 def test_hits_command_exits_on_login_exception():
@@ -158,7 +158,7 @@ def test_reload_crawler_command_exits_on_login_failure():
         result = runner.invoke(app, ["reload-crawler", "u.pythonanywhere.com"])
 
     assert result.exit_code == 1
-    assert "incorrect" in result.output.lower()
+    assert "Login failed" in result.output
 
 
 def test_reload_crawler_command_exits_on_reload_failure():
