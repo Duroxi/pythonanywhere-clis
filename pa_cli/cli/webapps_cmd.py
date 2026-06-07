@@ -1,3 +1,5 @@
+import re
+
 import typer
 
 from pa_cli.api.webapps import WebappsClient
@@ -5,6 +7,19 @@ from pa_cli.config import Config
 from pa_cli.crawler.account_crawler import AccountCrawler
 
 app = typer.Typer(help="Manage web apps on PythonAnywhere.")
+
+
+def _fix_remote_path(path: str) -> str:
+    """Fix paths mangled by Git Bash (MSYS2) path conversion.
+
+    Git Bash converts /home/user/dir to D:/Git/home/user/dir.
+    This function detects and reverses the conversion.
+    """
+    if re.match(r"^[A-Za-z]:/", path):
+        match = re.search(r"(/home/\S+)", path)
+        if match:
+            return match.group(1)
+    return path
 
 
 def _get_client() -> tuple:
@@ -32,9 +47,9 @@ def config(
 ):
     """Configure a web app."""
     account, client = _get_client()
-    kwargs = {"source_directory": source_dir}
+    kwargs = {"source_directory": _fix_remote_path(source_dir)}
     if virtualenv:
-        kwargs["virtualenv_path"] = virtualenv
+        kwargs["virtualenv_path"] = _fix_remote_path(virtualenv)
     client.update(account["username"], domain_name, **kwargs)
     typer.echo(f"Webapp {domain_name} configured.")
 
@@ -47,8 +62,9 @@ def static(
 ):
     """Add a static file mapping."""
     account, client = _get_client()
-    client.add_static_file(account["username"], domain_name, url=url, path=path)
-    typer.echo(f"Static mapping added: {url} -> {path}")
+    fixed_path = _fix_remote_path(path)
+    client.add_static_file(account["username"], domain_name, url=url, path=fixed_path)
+    typer.echo(f"Static mapping added: {url} -> {fixed_path}")
 
 
 @app.command()

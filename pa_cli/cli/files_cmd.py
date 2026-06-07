@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import typer
@@ -6,6 +7,19 @@ from pa_cli.api.files import FilesClient
 from pa_cli.config import Config
 
 app = typer.Typer(help="Manage files on PythonAnywhere.")
+
+
+def _fix_remote_path(path: str) -> str:
+    """Fix paths mangled by Git Bash (MSYS2) path conversion.
+
+    Git Bash converts /home/user/dir to D:/Git/home/user/dir.
+    This function detects and reverses the conversion.
+    """
+    if re.match(r"^[A-Za-z]:/", path):
+        match = re.search(r"(/home/\S+)", path)
+        if match:
+            return match.group(1)
+    return path
 
 
 @app.callback()
@@ -18,6 +32,7 @@ def _resolve_path(path: str | None, username: str) -> str:
     """Resolve remote path. Relative paths are under /home/{username}/."""
     if not path:
         return f"/home/{username}/"
+    path = _fix_remote_path(path)
     if path.startswith("/"):
         return path if path.endswith("/") else path + "/"
     return f"/home/{username}/{path}".rstrip("/") + "/"
