@@ -120,18 +120,24 @@ def test_register_posts_correct_form_data():
 # --- register failure tests ---
 
 
-def test_register_failure_returns_false():
-    """register returns False when response stays on registration page (200 with errors)."""
+def test_register_raises_on_failure():
+    """register raises ValueError when response stays on registration page (200 with errors)."""
     crawler = AccountCrawler()
 
+    error_html = '<html><body><ul class="errorlist"><li>This username is already taken.</li></ul></body></html>'
+    mock_resp = _mock_post_response(
+        "https://www.pythonanywhere.com/registration/register/beginner/", status_code=200
+    )
+    mock_resp.text = error_html
+
     with patch.object(crawler.session, "get", return_value=_mock_get_response()), \
-         patch.object(crawler.session, "post", return_value=_mock_post_response(
-             "https://www.pythonanywhere.com/registration/register/beginner/", status_code=200
-         )):
+         patch.object(crawler.session, "post", return_value=mock_resp):
 
-        result = crawler.register("baduser", "bad@example.com", "weak")
-
-    assert result is False
+        try:
+            crawler.register("baduser", "bad@example.com", "weak")
+            assert False, "Should have raised ValueError"
+        except ValueError as e:
+            assert "Registration failed" in str(e)
 
 
 # --- register error handling tests ---

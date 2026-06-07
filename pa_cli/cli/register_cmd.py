@@ -19,13 +19,10 @@ def register():
 
     try:
         crawler = AccountCrawler()
-        if crawler.register(username, email, password):
-            typer.echo(f"Account '{username}' registered successfully!")
-            typer.echo("Please check your email to verify your account.")
-            typer.echo("Then run: pa init")
-        else:
-            typer.echo("Registration failed. Please check your inputs.", err=True)
-            raise typer.Exit(code=1)
+        crawler.register(username, email, password)
+        typer.echo(f"Account '{username}' registered successfully!")
+        typer.echo("Please check your email to verify your account.")
+        typer.echo("Then run: pa init")
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(code=1)

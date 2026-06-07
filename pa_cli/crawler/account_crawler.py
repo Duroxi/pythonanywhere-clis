@@ -54,7 +54,21 @@ class AccountCrawler:
         except requests.RequestException as e:
             raise Exception(f"Registration request failed: {e}") from e
 
-        return "/registration/register/complete/" in register_resp.url
+        if "/registration/register/complete/" in register_resp.url:
+            return True
+
+        # Extract error messages from the response
+        soup2 = BeautifulSoup(register_resp.text, "html.parser")
+        errors = []
+        for elem in soup2.find_all(["li", "div", "span", "p"], class_=True):
+            classes = " ".join(elem.get("class", []))
+            if "error" in classes.lower():
+                text = elem.get_text(strip=True)
+                if text:
+                    errors.append(text)
+        if errors:
+            raise ValueError(f"Registration failed: {'; '.join(errors)}")
+        raise ValueError("Registration failed. Please check your input.")
 
     def login(self, password: str | None = None) -> bool:
         if password is None:
