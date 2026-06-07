@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock
 from typer.testing import CliRunner
 
 from pa_cli.cli.webapps_cmd import app
+from pa_cli.exceptions import AuthError, NetworkError
 
 runner = CliRunner()
 
@@ -101,7 +102,7 @@ def test_hits_command_exits_on_login_failure():
          patch("pa_cli.cli.webapps_cmd.AccountCrawler") as mock_cls:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
+        mock_crawler.login.side_effect = AuthError("Login failed: The user name or password is incorrect.")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["hits", "u.pythonanywhere.com"])
@@ -116,7 +117,7 @@ def test_hits_command_exits_on_login_exception():
          patch("pa_cli.cli.webapps_cmd.AccountCrawler") as mock_cls:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = ValueError("Password not found")
+        mock_crawler.login.side_effect = NetworkError("Password not found")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["hits", "u.pythonanywhere.com"])
@@ -152,7 +153,7 @@ def test_reload_crawler_command_exits_on_login_failure():
          patch("pa_cli.cli.webapps_cmd.AccountCrawler") as mock_cls:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
+        mock_crawler.login.side_effect = AuthError("Login failed: The user name or password is incorrect.")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["reload-crawler", "u.pythonanywhere.com"])
@@ -183,7 +184,7 @@ def test_reload_crawler_command_exits_on_login_exception():
          patch("pa_cli.cli.webapps_cmd.AccountCrawler") as mock_cls:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = ValueError("Password not found")
+        mock_crawler.login.side_effect = NetworkError("Password not found")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["reload-crawler", "u.pythonanywhere.com"])

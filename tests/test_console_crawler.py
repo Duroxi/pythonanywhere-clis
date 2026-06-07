@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock, PropertyMock
 import requests
 
 from pa_cli.crawler.console_crawler import ConsoleCrawler
+from pa_cli.exceptions import AuthError, NetworkError, APIError
 
 
 LOGIN_PAGE_HTML = '<html><body><form><input type="hidden" name="csrfmiddlewaretoken" value="test-csrf-token"></form></body></html>'
@@ -48,9 +49,8 @@ def test_login_failure_stays_on_login_page():
     with patch.object(crawler.session, "get", return_value=_mock_get_response()), \
          patch.object(crawler.session, "post", return_value=_mock_post_response("https://www.pythonanywhere.com/login/")):
 
-        result = crawler.login("baduser", "badpass")
-
-        assert result is False
+        with pytest.raises(AuthError, match="Login failed"):
+            crawler.login("baduser", "badpass")
 
 
 def test_login_uses_session_for_cookie_management():
@@ -91,31 +91,31 @@ def test_login_default_host():
 
 
 def test_login_raises_on_network_error():
-    """Login raises Exception with context on network failure."""
+    """Login raises NetworkError with context on network failure."""
     crawler = ConsoleCrawler()
 
     with patch.object(crawler.session, "get", side_effect=requests.ConnectionError("timeout")):
-        with pytest.raises(Exception, match="Failed to fetch login page"):
+        with pytest.raises(NetworkError, match="Failed to fetch login page"):
             crawler.login("testuser", "testpass")
 
 
 def test_login_raises_on_missing_csrf():
-    """Login raises Exception when CSRF token is not found on page."""
+    """Login raises APIError when CSRF token is not found on page."""
     crawler = ConsoleCrawler()
     html_without_csrf = '<html><body><form></form></body></html>'
 
     with patch.object(crawler.session, "get", return_value=_mock_get_response(html_without_csrf)):
-        with pytest.raises(Exception, match="CSRF token not found"):
+        with pytest.raises(APIError, match="CSRF token not found"):
             crawler.login("testuser", "testpass")
 
 
 def test_login_raises_on_post_network_error():
-    """Login raises Exception with context when POST fails."""
+    """Login raises NetworkError with context when POST fails."""
     crawler = ConsoleCrawler()
 
     with patch.object(crawler.session, "get", return_value=_mock_get_response()), \
          patch.object(crawler.session, "post", side_effect=requests.ConnectionError("timeout")):
-        with pytest.raises(Exception, match="Login request failed"):
+        with pytest.raises(NetworkError, match="Login request failed"):
             crawler.login("testuser", "testpass")
 
 
@@ -154,11 +154,11 @@ def test_list_empty():
 
 
 def test_list_raises_on_network_error():
-    """list raises Exception on network failure."""
+    """list raises NetworkError on network failure."""
     crawler = ConsoleCrawler()
 
     with patch.object(crawler.session, "get", side_effect=requests.ConnectionError("timeout")):
-        with pytest.raises(Exception, match="Failed to list consoles"):
+        with pytest.raises(NetworkError, match="Failed to list consoles"):
             crawler.list("testuser")
 
 
@@ -223,20 +223,20 @@ def test_create_with_custom_executable():
 
 
 def test_create_raises_on_network_error():
-    """create raises Exception on network failure."""
+    """create raises NetworkError on network failure."""
     crawler = ConsoleCrawler()
     crawler.session.cookies.set("csrftoken", "test-csrf-token")
 
     with patch.object(crawler.session, "post", side_effect=requests.ConnectionError("timeout")):
-        with pytest.raises(Exception, match="Failed to create console"):
+        with pytest.raises(NetworkError, match="Failed to create console"):
             crawler.create("testuser")
 
 
 def test_create_raises_on_missing_csrf():
-    """create raises Exception when CSRF token is missing from cookies."""
+    """create raises APIError when CSRF token is missing from cookies."""
     crawler = ConsoleCrawler()
 
-    with pytest.raises(Exception, match="CSRF token not found"):
+    with pytest.raises(APIError, match="CSRF token not found"):
         crawler.create("testuser")
 
 
@@ -294,28 +294,28 @@ def test_activate_connects_via_websocket():
 
 
 def test_activate_raises_on_network_error():
-    """activate raises Exception on network failure when fetching frame page."""
+    """activate raises NetworkError on network failure when fetching frame page."""
     crawler = ConsoleCrawler()
 
     with patch.object(crawler.session, "get", side_effect=requests.ConnectionError("timeout")):
-        with pytest.raises(Exception, match="Failed to fetch console frame page"):
+        with pytest.raises(NetworkError, match="Failed to fetch console frame page"):
             crawler.activate("testuser", 12345)
 
 
 def test_activate_raises_on_missing_websocket_info():
-    """activate raises Exception when WebSocket info cannot be parsed from frame page."""
+    """activate raises APIError when WebSocket info cannot be parsed from frame page."""
     crawler = ConsoleCrawler()
     mock_resp = MagicMock()
     mock_resp.text = "<html><body>No LoadConsole here</body></html>"
     mock_resp.raise_for_status = MagicMock()
 
     with patch.object(crawler.session, "get", return_value=mock_resp):
-        with pytest.raises(Exception, match="Could not parse WebSocket info"):
+        with pytest.raises(APIError, match="Could not parse WebSocket info"):
             crawler.activate("testuser", 12345)
 
 
 def test_activate_raises_on_websocket_error():
-    """activate raises Exception when WebSocket connection fails."""
+    """activate raises NetworkError when WebSocket connection fails."""
     crawler = ConsoleCrawler()
     mock_resp = MagicMock()
     mock_resp.text = FRAME_PAGE_HTML
@@ -324,7 +324,7 @@ def test_activate_raises_on_websocket_error():
     with patch.object(crawler.session, "get", return_value=mock_resp), \
          patch("pa_cli.crawler.console_crawler.websocket") as mock_ws_mod:
         mock_ws_mod.create_connection.side_effect = Exception("Connection refused")
-        with pytest.raises(Exception, match="WebSocket connection failed"):
+        with pytest.raises(NetworkError, match="WebSocket connection failed"):
             crawler.activate("testuser", 12345)
 
 
@@ -341,7 +341,7 @@ def test_activate_closes_websocket_on_error():
     with patch.object(crawler.session, "get", return_value=mock_resp), \
          patch("pa_cli.crawler.console_crawler.websocket") as mock_ws_mod:
         mock_ws_mod.create_connection.return_value = mock_ws
-        with pytest.raises(Exception, match="WebSocket connection failed"):
+        with pytest.raises(NetworkError, match="WebSocket connection failed"):
             crawler.activate("testuser", 46955916)
 
     mock_ws.close.assert_called_once()
@@ -402,20 +402,20 @@ def test_delete_returns_none():
 
 
 def test_delete_raises_on_missing_csrf():
-    """delete raises Exception when CSRF token is missing from cookies."""
+    """delete raises APIError when CSRF token is missing from cookies."""
     crawler = ConsoleCrawler()
 
-    with pytest.raises(Exception, match="CSRF token not found"):
+    with pytest.raises(APIError, match="CSRF token not found"):
         crawler.delete("testuser", 12345)
 
 
 def test_delete_raises_on_network_error():
-    """delete raises Exception on network failure."""
+    """delete raises NetworkError on network failure."""
     crawler = ConsoleCrawler()
     crawler.session.cookies.set("csrftoken", "test-csrf-token")
 
     with patch.object(crawler.session, "delete", side_effect=requests.ConnectionError("timeout")):
-        with pytest.raises(Exception, match="Failed to delete console"):
+        with pytest.raises(NetworkError, match="Failed to delete console"):
             crawler.delete("testuser", 12345)
 
 

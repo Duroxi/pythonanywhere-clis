@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock, call
 from typer.testing import CliRunner
 
 from pa_cli.cli.init_cmd import app
+from pa_cli.exceptions import AuthError, NetworkError
 
 runner = CliRunner()
 
@@ -58,7 +59,7 @@ def test_init_login_failure_shows_error(tmp_path):
     with patch("pa_cli.cli.init_cmd.Config.save"), \
          patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
         mock_crawler = MockCrawler.return_value
-        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
+        mock_crawler.login.side_effect = AuthError("Login failed: The user name or password is incorrect.")
 
         result = runner.invoke(app, input="testuser\nsecret123\n\n")
 
@@ -71,7 +72,7 @@ def test_init_login_exception_shows_error(tmp_path):
     with patch("pa_cli.cli.init_cmd.Config.save"), \
          patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
         mock_crawler = MockCrawler.return_value
-        mock_crawler.login.side_effect = Exception("Network error")
+        mock_crawler.login.side_effect = NetworkError("Network error")
 
         result = runner.invoke(app, input="testuser\nsecret123\n\n")
 

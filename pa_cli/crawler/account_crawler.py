@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from pa_cli.config import Config
+from pa_cli.exceptions import APIError, AuthError, NetworkError, NotFoundError
 
 
 class AccountCrawler:
@@ -26,12 +27,12 @@ class AccountCrawler:
             register_page_resp = self.session.get(register_url)
             register_page_resp.raise_for_status()
         except requests.RequestException as e:
-            raise Exception(f"Failed to fetch registration page: {e}") from e
+            raise NetworkError(f"Failed to fetch registration page: {e}") from e
 
         soup = BeautifulSoup(register_page_resp.text, "html.parser")
         csrf_input = soup.find("input", {"name": "csrfmiddlewaretoken"})
         if csrf_input is None:
-            raise Exception("CSRF token not found on registration page")
+            raise APIError("CSRF token not found on registration page")
 
         data = {
             "csrfmiddlewaretoken": csrf_input["value"],
@@ -52,7 +53,7 @@ class AccountCrawler:
             register_resp = self.session.post(register_url, data=data, headers=headers)
             register_resp.raise_for_status()
         except requests.RequestException as e:
-            raise Exception(f"Registration request failed: {e}") from e
+            raise NetworkError(f"Registration request failed: {e}") from e
 
         if "/registration/register/complete/" in register_resp.url:
             return True
@@ -67,15 +68,15 @@ class AccountCrawler:
                 if text:
                     errors.append(text)
         if errors:
-            raise ValueError(f"Registration failed: {'; '.join(errors)}")
-        raise ValueError("Registration failed. Please check your input.")
+            raise AuthError(f"Registration failed: {'; '.join(errors)}")
+        raise AuthError("Registration failed. Please check your input.")
 
     def login(self, password: str | None = None) -> bool:
         if password is None:
             config = Config.load()
             password = config.get("password")
             if not password:
-                raise ValueError(
+                raise AuthError(
                     "Password not found in config. Run 'pa account login' to store it."
                 )
 
@@ -85,12 +86,12 @@ class AccountCrawler:
             login_page_resp = self.session.get(login_url)
             login_page_resp.raise_for_status()
         except requests.RequestException as e:
-            raise Exception(f"Failed to fetch login page: {e}") from e
+            raise NetworkError(f"Failed to fetch login page: {e}") from e
 
         soup = BeautifulSoup(login_page_resp.text, "html.parser")
         csrf_input = soup.find("input", {"name": "csrfmiddlewaretoken"})
         if csrf_input is None:
-            raise Exception("CSRF token not found on login page")
+            raise APIError("CSRF token not found on login page")
 
         data = {
             "csrfmiddlewaretoken": csrf_input["value"],
@@ -108,7 +109,7 @@ class AccountCrawler:
             login_resp = self.session.post(login_url, data=data, headers=headers)
             login_resp.raise_for_status()
         except requests.RequestException as e:
-            raise Exception(f"Login request failed: {e}") from e
+            raise NetworkError(f"Login request failed: {e}") from e
 
         if "/login/" in login_resp.url:
             soup2 = BeautifulSoup(login_resp.text, "html.parser")
@@ -116,8 +117,8 @@ class AccountCrawler:
             for p in soup2.find_all("p"):
                 text = p.get_text(strip=True)
                 if "incorrect" in text.lower() or "invalid" in text.lower():
-                    raise ValueError(f"Login failed: {text}")
-            raise ValueError("Login failed. Check your username and password.")
+                    raise AuthError(f"Login failed: {text}")
+            raise AuthError("Login failed. Check your username and password.")
 
         return True
 
@@ -129,7 +130,7 @@ class AccountCrawler:
             resp = self.session.get(account_url)
             resp.raise_for_status()
         except requests.RequestException as e:
-            raise Exception(f"Failed to fetch account page: {e}") from e
+            raise NetworkError(f"Failed to fetch account page: {e}") from e
 
         soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -138,7 +139,7 @@ class AccountCrawler:
         if token_elem:
             return token_elem.text.strip()
 
-        raise Exception("API token not found on account page")
+        raise NotFoundError("API token not found on account page")
 
     def create_token(self, username: str | None = None) -> str:
         """Create a new API token via the account page form."""
@@ -149,16 +150,16 @@ class AccountCrawler:
             resp = self.session.get(account_url)
             resp.raise_for_status()
         except requests.RequestException as e:
-            raise Exception(f"Failed to fetch account page: {e}") from e
+            raise NetworkError(f"Failed to fetch account page: {e}") from e
 
         soup = BeautifulSoup(resp.text, "html.parser")
         form = soup.find("form", action=lambda a: a and "new_token" in a)
         if form is None:
-            raise Exception("Token creation form not found on account page")
+            raise NotFoundError("Token creation form not found on account page")
 
         csrf_input = form.find("input", {"name": "csrfmiddlewaretoken"})
         if csrf_input is None:
-            raise Exception("CSRF token not found in token creation form")
+            raise APIError("CSRF token not found in token creation form")
 
         post_url = form["action"]
         if not post_url.startswith("http"):
@@ -170,24 +171,24 @@ class AccountCrawler:
         try:
             post_resp = self.session.post(post_url, data=data, headers=headers)
         except requests.RequestException as e:
-            raise Exception(f"Token creation request failed: {e}") from e
+            raise NetworkError(f"Token creation request failed: {e}") from e
 
         if post_resp.status_code not in (200, 302):
-            raise Exception(f"Token creation failed: HTTP {post_resp.status_code}")
+            raise APIError(f"Token creation failed: HTTP {post_resp.status_code}")
 
         # Re-fetch account page to read the newly created token
         try:
             resp2 = self.session.get(account_url)
             resp2.raise_for_status()
         except requests.RequestException as e:
-            raise Exception(f"Failed to fetch account page after token creation: {e}") from e
+            raise NetworkError(f"Failed to fetch account page after token creation: {e}") from e
 
         soup2 = BeautifulSoup(resp2.text, "html.parser")
         token_elem = soup2.find("code", class_="api_token")
         if token_elem:
             return token_elem.text.strip()
 
-        raise Exception("Token created but could not be read from account page")
+        raise APIError("Token created but could not be read from account page")
 
     def extend_expiry(self, username: str | None = None) -> bool:
         resolved = username or self.username
@@ -196,9 +197,9 @@ class AccountCrawler:
         try:
             resp = self.session.get(webapps_url)
             if resp.status_code != 200:
-                raise Exception(f"Webapps page returned HTTP {resp.status_code}")
+                raise APIError(f"Webapps page returned HTTP {resp.status_code}")
         except requests.RequestException as e:
-            raise Exception(f"Failed to fetch webapps page: {e}") from e
+            raise NetworkError(f"Failed to fetch webapps page: {e}") from e
 
         soup = BeautifulSoup(resp.text, "html.parser")
         extend_form = None
@@ -209,11 +210,11 @@ class AccountCrawler:
                 break
 
         if extend_form is None:
-            raise Exception("Extend form not found on webapps page")
+            raise NotFoundError("Extend form not found on webapps page")
 
         csrf_input = extend_form.find("input", {"name": "csrfmiddlewaretoken"})
         if csrf_input is None:
-            raise Exception("CSRF token not found in extend form")
+            raise APIError("CSRF token not found in extend form")
 
         extend_url = extend_form["action"]
         if not extend_url.startswith("http"):
@@ -225,7 +226,7 @@ class AccountCrawler:
         try:
             extend_resp = self.session.post(extend_url, data=data, headers=headers)
         except requests.RequestException as e:
-            raise Exception(f"Extend request failed: {e}") from e
+            raise NetworkError(f"Extend request failed: {e}") from e
 
         return extend_resp.status_code in (200, 302)
 
@@ -255,11 +256,11 @@ class AccountCrawler:
             resp = self.session.get(webapps_url)
             resp.raise_for_status()
         except requests.RequestException as e:
-            raise Exception(f"Failed to fetch webapps page: {e}") from e
+            raise NetworkError(f"Failed to fetch webapps page: {e}") from e
 
         csrf_token = self.session.cookies.get("csrftoken")
         if csrf_token is None:
-            raise Exception("CSRF token not found in cookies")
+            raise APIError("CSRF token not found in cookies")
 
         reload_url = f"{self.base_url}/user/{resolved}/webapps/{domain}/reload"
         headers = {
@@ -272,7 +273,7 @@ class AccountCrawler:
         try:
             reload_resp = self.session.post(reload_url, headers=headers)
         except requests.RequestException as e:
-            raise Exception(f"Reload request failed: {e}") from e
+            raise NetworkError(f"Reload request failed: {e}") from e
 
         return reload_resp.text == "OK"
 
@@ -289,6 +290,6 @@ class AccountCrawler:
             resp = self.session.get(hits_url, headers=headers)
             resp.raise_for_status()
         except requests.RequestException as e:
-            raise Exception(f"Failed to fetch hits: {e}") from e
+            raise NetworkError(f"Failed to fetch hits: {e}") from e
 
         return resp.json()

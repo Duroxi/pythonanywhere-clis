@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from pa_cli.api.files import FilesClient
+from pa_cli.exceptions import APIError, NotFoundError
 
 
 def test_upload_file():
@@ -70,7 +71,7 @@ def test_list_raises_on_http_error():
     mock_response.raise_for_status.side_effect = Exception("404")
 
     with patch.object(client.session, "get", return_value=mock_response):
-        with pytest.raises(Exception, match="List failed"):
+        with pytest.raises(NotFoundError, match="Not found"):
             client.list(username="testuser", remote_path="/home/testuser/missing/")
 
 
@@ -104,7 +105,7 @@ def test_download_raises_on_http_error():
     mock_response.raise_for_status.side_effect = Exception("403")
 
     with patch.object(client.session, "get", return_value=mock_response):
-        with pytest.raises(Exception, match="Download failed"):
+        with pytest.raises(APIError, match="Download failed"):
             client.download(username="testuser", remote_path="/home/testuser/secret.txt")
 
 
@@ -135,5 +136,5 @@ def test_delete_raises_on_http_error():
     mock_response.raise_for_status.side_effect = Exception("404")
 
     with patch.object(client.session, "delete", return_value=mock_response):
-        with pytest.raises(Exception, match="Delete failed"):
+        with pytest.raises(NotFoundError, match="Not found"):
             client.delete(username="testuser", remote_path="/home/testuser/missing.txt")

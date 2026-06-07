@@ -5,6 +5,7 @@ import typer
 from pa_cli.api.webapps import WebappsClient
 from pa_cli.config import Config
 from pa_cli.crawler.account_crawler import AccountCrawler
+from pa_cli.exceptions import AuthError, NetworkError, NotFoundError, APIError
 
 app = typer.Typer(help="Manage web apps on PythonAnywhere.")
 
@@ -105,8 +106,14 @@ def hits(
         typer.echo(f"Hit statistics for {domain_name}:")
         for key, value in data.items():
             typer.echo(f"  {key}: {value}")
-    except Exception as e:
-        typer.echo(f"Error: {e}", err=True)
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"资源不存在: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -126,6 +133,12 @@ def reload_crawler(
         else:
             typer.echo(f"Failed to reload webapp {domain_name}.", err=True)
             raise typer.Exit(code=1)
-    except Exception as e:
-        typer.echo(f"Error: {e}", err=True)
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"资源不存在: {e}", err=True)
         raise typer.Exit(code=1)

@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock
 from typer.testing import CliRunner
 
 from pa_cli.cli.account_cmd import app
+from pa_cli.exceptions import AuthError, NotFoundError
 
 runner = CliRunner()
 
@@ -51,7 +52,7 @@ def test_token_command_creates_token_when_none_exists():
     with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
         mock_crawler.login.return_value = True
-        mock_crawler.get_token.side_effect = Exception("API token not found")
+        mock_crawler.get_token.side_effect = NotFoundError("API token not found")
         mock_crawler.create_token.return_value = "newtoken456"
         mock_cls.return_value = mock_crawler
 
@@ -85,7 +86,7 @@ def test_token_command_exits_on_login_failure():
     """token command exits with error when login raises."""
     with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
+        mock_crawler.login.side_effect = AuthError("Login failed: The user name or password is incorrect.")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["token"])
@@ -98,7 +99,7 @@ def test_token_command_exits_on_login_exception():
     """token command exits with error when login raises exception."""
     with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = ValueError("Password not found in config")
+        mock_crawler.login.side_effect = AuthError("Password not found in config")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["token"])
@@ -130,7 +131,7 @@ def test_extend_command_exits_on_login_failure():
     """extend command exits with error when login raises."""
     with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
+        mock_crawler.login.side_effect = AuthError("Login failed: The user name or password is incorrect.")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["extend"])
@@ -157,7 +158,7 @@ def test_extend_command_exits_on_login_exception():
     """extend command exits with error when login raises exception."""
     with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = ValueError("Password not found in config")
+        mock_crawler.login.side_effect = AuthError("Password not found in config")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["extend"])

@@ -5,7 +5,7 @@
 
 ---
 
-## 🔴 P0 - 必须修复
+## ~~🔴 P0 - 必须修复~~ ✅ 全部完成
 
 ### 1. 密码明文存储
 - **文件**：`pa_cli/config.py`
@@ -14,7 +14,7 @@
   - Token 用 `keyring` 库存系统密钥环，或至少 `chmod 600`
   - 密码不应该持久化存储，用完即弃或用 session cookie
   - 添加 `.gitignore` 提示
-- **状态**：🔲
+- **状态**：✅
 
 ### 2. 异常体系缺失
 - **文件**：全局（`api/client.py`、`crawler/account_crawler.py` 等）
@@ -27,7 +27,7 @@
   class NetworkError(PACliError): pass
   class NotFoundError(APIError): pass
   ```
-- **状态**：🔲
+- **状态**：✅
 
 ---
 
@@ -109,7 +109,7 @@
 - **文件**：`pa_cli/config.py`
 - **问题**：config 支持多 accounts 但没有 `pa account switch` 命令
 - **方案**：添加 `pa account list` + `pa account switch <username>`
-- **状态**：🔲
+- **状态**：✅
 
 ### 13. 测试覆盖率不足
 - **文件**：`tests/`

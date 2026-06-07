@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock
 from typer.testing import CliRunner
 
 from pa_cli.cli.consoles_cmd import app
+from pa_cli.exceptions import AuthError
 
 runner = CliRunner()
 
@@ -68,7 +69,7 @@ def test_console_activate_error():
          patch("pa_cli.crawler.console_crawler.ConsoleCrawler") as mock_cls:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h", "password": "p"}
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = Exception("Login failed")
+        mock_crawler.login.side_effect = AuthError("Login failed")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["activate", "42"])
@@ -161,7 +162,7 @@ def test_console_get_or_create_error():
          patch("pa_cli.crawler.console_crawler.ConsoleCrawler") as mock_cls:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h", "password": "p"}
         mock_crawler = MagicMock()
-        mock_crawler.login.side_effect = Exception("Login failed")
+        mock_crawler.login.side_effect = AuthError("Login failed")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["get-or-create"])

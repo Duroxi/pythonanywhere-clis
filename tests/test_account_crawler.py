@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock, PropertyMock
 import requests
 
 from pa_cli.crawler.account_crawler import AccountCrawler
+from pa_cli.exceptions import AuthError, NetworkError, APIError, NotFoundError
 
 
 MOCK_CONFIG = {"username": "configuser", "token": "cfg-token-1234567890abcdef1234567890", "host": "www.pythonanywhere.com", "password": "configpass"}
@@ -121,7 +122,7 @@ def test_register_posts_correct_form_data():
 
 
 def test_register_raises_on_failure():
-    """register raises ValueError when response stays on registration page (200 with errors)."""
+    """register raises AuthError when response stays on registration page (200 with errors)."""
     crawler = AccountCrawler()
 
     error_html = '<html><body><ul class="errorlist"><li>This username is already taken.</li></ul></body></html>'
@@ -133,11 +134,8 @@ def test_register_raises_on_failure():
     with patch.object(crawler.session, "get", return_value=_mock_get_response()), \
          patch.object(crawler.session, "post", return_value=mock_resp):
 
-        try:
+        with pytest.raises(AuthError, match="Registration failed"):
             crawler.register("baduser", "bad@example.com", "weak")
-            assert False, "Should have raised ValueError"
-        except ValueError as e:
-            assert "Registration failed" in str(e)
 
 
 # --- register error handling tests ---
@@ -676,11 +674,11 @@ def test_login_uses_explicit_password():
 
 
 def test_login_raises_when_no_password_in_config():
-    """login raises ValueError when config has no password and no password param given."""
+    """login raises AuthError when config has no password and no password param given."""
     config_no_pw = {"username": "configuser", "token": "abc", "host": "www.pythonanywhere.com"}
     with patch("pa_cli.crawler.account_crawler.Config.load", return_value=config_no_pw):
         crawler = AccountCrawler()
-        with pytest.raises(ValueError, match="Password not found"):
+        with pytest.raises(AuthError, match="Password not found"):
             crawler.login()
 
 
@@ -704,7 +702,7 @@ def test_login_posts_to_login_url():
 
 
 def test_login_raises_on_wrong_password():
-    """login raises ValueError when password is incorrect."""
+    """login raises AuthError when password is incorrect."""
     crawler = AccountCrawler()
 
     error_html = '<html><body><p>The user name or password is incorrect. Please try again.</p></body></html>'
@@ -713,19 +711,16 @@ def test_login_raises_on_wrong_password():
 
     with patch.object(crawler.session, "get", return_value=_mock_get_response(LOGIN_PAGE_HTML)), \
          patch.object(crawler.session, "post", return_value=mock_resp):
-        try:
+        with pytest.raises(AuthError, match="incorrect"):
             crawler.login()
-            assert False, "Should have raised ValueError"
-        except ValueError as e:
-            assert "incorrect" in str(e).lower()
 
 
 def test_login_raises_on_get_network_error():
-    """login raises Exception when fetching login page fails."""
+    """login raises NetworkError when fetching login page fails."""
     crawler = AccountCrawler()
 
     with patch.object(crawler.session, "get", side_effect=requests.ConnectionError("timeout")):
-        with pytest.raises(Exception, match="Failed to fetch login page"):
+        with pytest.raises(NetworkError, match="Failed to fetch login page"):
             crawler.login()
 
 

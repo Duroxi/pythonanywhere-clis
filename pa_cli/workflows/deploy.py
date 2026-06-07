@@ -4,6 +4,7 @@ from pathlib import Path
 from pa_cli.api.files import FilesClient
 from pa_cli.api.consoles import ConsolesClient
 from pa_cli.api.webapps import WebappsClient
+from pa_cli.exceptions import PACliError
 
 POLL_INTERVAL = 2  # seconds between output checks
 MAX_WAIT = 300  # max seconds to wait for a command
@@ -36,7 +37,7 @@ def deploy(
 ) -> str:
     local_path = Path(local_dir)
     if not local_path.is_dir():
-        raise ValueError(f"{local_dir} is not a directory")
+        raise PACliError(f"{local_dir} is not a directory")
 
     remote_base = f"/home/{username}/{local_path.name}"
     files_client = FilesClient(token=token, host=host)

@@ -1,4 +1,5 @@
 from pa_cli.api.client import BaseClient
+from pa_cli.exceptions import APIError, NotFoundError
 
 
 class FilesClient(BaseClient):
@@ -9,10 +10,12 @@ class FilesClient(BaseClient):
             remote_path=remote_path,
         )
         response = self.session.post(url, files={"content": content})
+        if response.status_code == 404:
+            raise NotFoundError(f"Not found: {remote_path}")
         try:
             response.raise_for_status()
         except Exception as e:
-            raise Exception(f"Upload failed: {response.status_code} {response.text}") from e
+            raise APIError(f"Upload failed: {response.status_code} {response.text}") from e
         return response.status_code
 
     def list(self, username: str, remote_path: str) -> dict:
@@ -23,10 +26,12 @@ class FilesClient(BaseClient):
             remote_path=remote_path,
         )
         response = self.session.get(url)
+        if response.status_code == 404:
+            raise NotFoundError(f"Not found: {remote_path}")
         try:
             response.raise_for_status()
         except Exception as e:
-            raise Exception(f"List failed: {response.status_code} {response.text}") from e
+            raise APIError(f"List failed: {response.status_code} {response.text}") from e
         return response.json()
 
     def download(self, username: str, remote_path: str) -> bytes:
@@ -37,10 +42,12 @@ class FilesClient(BaseClient):
             remote_path=remote_path,
         )
         response = self.session.get(url)
+        if response.status_code == 404:
+            raise NotFoundError(f"Not found: {remote_path}")
         try:
             response.raise_for_status()
         except Exception as e:
-            raise Exception(f"Download failed: {response.status_code} {response.text}") from e
+            raise APIError(f"Download failed: {response.status_code} {response.text}") from e
         return response.content
 
     def delete(self, username: str, remote_path: str) -> None:
@@ -51,7 +58,9 @@ class FilesClient(BaseClient):
             remote_path=remote_path,
         )
         response = self.session.delete(url)
+        if response.status_code == 404:
+            raise NotFoundError(f"Not found: {remote_path}")
         try:
             response.raise_for_status()
         except Exception as e:
-            raise Exception(f"Delete failed: {response.status_code} {response.text}") from e
+            raise APIError(f"Delete failed: {response.status_code} {response.text}") from e

@@ -2,6 +2,7 @@ import typer
 
 from pa_cli.config import Config
 from pa_cli.crawler.account_crawler import AccountCrawler
+from pa_cli.exceptions import AuthError, NetworkError, NotFoundError
 
 app = typer.Typer(help="Account management commands.")
 
@@ -83,12 +84,18 @@ def token(
                 existing = crawler.get_token()
                 Config.save(token=existing)
                 typer.echo(f"API token: {existing}")
-            except Exception:
+            except NotFoundError:
                 new_token = crawler.create_token()
                 Config.save(token=new_token)
                 typer.echo(f"Token created: {new_token}")
-    except Exception as e:
-        typer.echo(f"Error: {e}", err=True)
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"资源不存在: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -112,7 +119,13 @@ def extend():
         else:
             typer.echo("Failed to extend account expiry.", err=True)
             raise typer.Exit(code=1)
-    except Exception as e:
-        typer.echo(f"Error: {e}", err=True)
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"资源不存在: {e}", err=True)
         raise typer.Exit(code=1)
 

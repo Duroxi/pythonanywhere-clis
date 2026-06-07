@@ -2,6 +2,7 @@ import typer
 
 from pa_cli.api.consoles import ConsolesClient
 from pa_cli.config import Config
+from pa_cli.exceptions import AuthError, NetworkError, NotFoundError
 
 app = typer.Typer(help="Manage consoles on PythonAnywhere.")
 
@@ -42,8 +43,11 @@ def activate(
         crawler.login(account["username"], account["password"])
         crawler.activate(account["username"], console_id)
         typer.echo(f"Console {console_id} activated successfully.")
-    except Exception as e:
-        typer.echo(f"Error: {e}", err=True)
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -97,8 +101,11 @@ def get_or_create(
         crawler.login(account["username"], account["password"])
         console_id = crawler.get_or_create(account["username"], executable=executable)
         typer.echo(f"Console ready: {console_id}")
-    except Exception as e:
-        typer.echo(f"Error: {e}", err=True)
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
         raise typer.Exit(code=1)
 
 

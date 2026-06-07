@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock
 from typer.testing import CliRunner
 
 from pa_cli.cli.register_cmd import app
+from pa_cli.exceptions import AuthError, NetworkError
 
 runner = CliRunner()
 
@@ -40,7 +41,7 @@ def test_register_failure():
     """register command exits with error when AccountCrawler.register raises."""
     with patch("pa_cli.cli.register_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
-        mock_crawler.register.side_effect = ValueError("Registration failed: Username: This username is already taken.")
+        mock_crawler.register.side_effect = AuthError("Registration failed: Username: This username is already taken.")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(
@@ -55,7 +56,7 @@ def test_register_exception():
     """register command exits with error when AccountCrawler raises exception."""
     with patch("pa_cli.cli.register_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
-        mock_crawler.register.side_effect = Exception("Network error")
+        mock_crawler.register.side_effect = NetworkError("Network error")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(
