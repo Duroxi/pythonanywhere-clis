@@ -71,10 +71,7 @@ def token(
     """Get API token. Creates one automatically if none exists. Use --revoke to force refresh."""
     try:
         crawler = AccountCrawler()
-        if not crawler.login():
-            typer.echo("Login failed. Check your credentials.", err=True)
-            raise typer.Exit(code=1)
-
+        crawler.login()
         typer.echo(f"[account: {crawler.username}]")
 
         if revoke:
@@ -100,10 +97,7 @@ def extend():
     """Extend account expiry by logging in via crawler."""
     try:
         crawler = AccountCrawler()
-        if not crawler.login():
-            typer.echo("Login failed. Check your credentials.", err=True)
-            raise typer.Exit(code=1)
-
+        crawler.login()
         typer.echo(f"[account: {crawler.username}]")
 
         current_expiry = crawler.get_expiry_date()

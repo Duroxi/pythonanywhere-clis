@@ -58,14 +58,12 @@ def test_init_login_failure_shows_error(tmp_path):
     with patch("pa_cli.cli.init_cmd.Config.save"), \
          patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
         mock_crawler = MockCrawler.return_value
-        mock_crawler.login.return_value = False
+        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
 
         result = runner.invoke(app, input="testuser\nsecret123\n\n")
 
     assert result.exit_code == 1
-    assert "Login failed" in result.output
-    assert "check your username and password" in result.output
-    assert "pa register" in result.output
+    assert "incorrect" in result.output.lower()
 
 
 def test_init_login_exception_shows_error(tmp_path):

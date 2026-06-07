@@ -85,9 +85,7 @@ def hits(
     try:
         account = Config.load(verbose=True)
         crawler = AccountCrawler()
-        if not crawler.login():
-            typer.echo("Login failed. Check your credentials.", err=True)
-            raise typer.Exit(code=1)
+        crawler.login()
         data = crawler.get_hits(domain_name)
         typer.echo(f"Hit statistics for {domain_name}:")
         for key, value in data.items():
@@ -105,9 +103,7 @@ def reload_crawler(
     try:
         account = Config.load(verbose=True)
         crawler = AccountCrawler()
-        if not crawler.login():
-            typer.echo("Login failed. Check your credentials.", err=True)
-            raise typer.Exit(code=1)
+        crawler.login()
         if crawler.reload_webapp(domain_name):
             typer.echo(f"Webapp {domain_name} reloaded successfully.")
         else:

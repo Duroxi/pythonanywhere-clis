@@ -96,7 +96,16 @@ class AccountCrawler:
         except requests.RequestException as e:
             raise Exception(f"Login request failed: {e}") from e
 
-        return "/login/" not in login_resp.url
+        if "/login/" in login_resp.url:
+            soup2 = BeautifulSoup(login_resp.text, "html.parser")
+            # Extract error message from <p> tags
+            for p in soup2.find_all("p"):
+                text = p.get_text(strip=True)
+                if "incorrect" in text.lower() or "invalid" in text.lower():
+                    raise ValueError(f"Login failed: {text}")
+            raise ValueError("Login failed. Check your username and password.")
+
+        return True
 
     def get_token(self, username: str | None = None) -> str:
         resolved = username or self.username

@@ -19,15 +19,12 @@ def init():
     # Auto-login and fetch API token
     try:
         crawler = AccountCrawler()
-        if crawler.login():
-            token = crawler.get_token()
-            Config.save(token=token)
-            typer.echo(f"Account '{username}' configured successfully.")
-            typer.echo("API token fetched and saved.")
-        else:
-            typer.echo("Login failed. Please check your username and password.", err=True)
-            typer.echo("Don't have an account? Register with: pa register", err=True)
-            raise typer.Exit(code=1)
+        crawler.login()
+        token = crawler.get_token()
+        Config.save(token=token)
+        typer.echo(f"Account '{username}' configured successfully.")
+        typer.echo("API token fetched and saved.")
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
+        typer.echo("Don't have an account? Register with: pa register", err=True)
         raise typer.Exit(code=1)

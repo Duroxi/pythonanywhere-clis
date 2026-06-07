@@ -697,17 +697,21 @@ def test_login_posts_to_login_url():
     assert posted_data["login_view-current_step"] == "auth"
 
 
-def test_login_returns_false_on_failure():
-    """login returns False when response stays on login page."""
+def test_login_raises_on_wrong_password():
+    """login raises ValueError when password is incorrect."""
     crawler = AccountCrawler()
 
-    with patch.object(crawler.session, "get", return_value=_mock_get_response(LOGIN_PAGE_HTML)), \
-         patch.object(crawler.session, "post", return_value=_mock_post_response(
-             "https://www.pythonanywhere.com/login/", status_code=200
-         )):
-        result = crawler.login()
+    error_html = '<html><body><p>The user name or password is incorrect. Please try again.</p></body></html>'
+    mock_resp = _mock_post_response("https://www.pythonanywhere.com/login/", status_code=200)
+    mock_resp.text = error_html
 
-    assert result is False
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(LOGIN_PAGE_HTML)), \
+         patch.object(crawler.session, "post", return_value=mock_resp):
+        try:
+            crawler.login()
+            assert False, "Should have raised ValueError"
+        except ValueError as e:
+            assert "incorrect" in str(e).lower()
 
 
 def test_login_raises_on_get_network_error():

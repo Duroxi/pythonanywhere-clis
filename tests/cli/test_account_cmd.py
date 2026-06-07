@@ -82,16 +82,16 @@ def test_token_command_revoke_creates_new_token():
 
 
 def test_token_command_exits_on_login_failure():
-    """token command exits with error when login returns False."""
+    """token command exits with error when login raises."""
     with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
-        mock_crawler.login.return_value = False
+        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["token"])
 
     assert result.exit_code == 1
-    assert "Login failed" in result.output
+    assert "incorrect" in result.output.lower()
 
 
 def test_token_command_exits_on_login_exception():
@@ -127,16 +127,16 @@ def test_extend_command_logs_in_and_extends():
 
 
 def test_extend_command_exits_on_login_failure():
-    """extend command exits with error when login returns False."""
+    """extend command exits with error when login raises."""
     with patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
         mock_crawler = MagicMock()
-        mock_crawler.login.return_value = False
+        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["extend"])
 
     assert result.exit_code == 1
-    assert "Login failed" in result.output
+    assert "incorrect" in result.output.lower()
 
 
 def test_extend_command_exits_on_extend_failure():

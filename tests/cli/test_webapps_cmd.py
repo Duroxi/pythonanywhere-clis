@@ -101,13 +101,13 @@ def test_hits_command_exits_on_login_failure():
          patch("pa_cli.cli.webapps_cmd.AccountCrawler") as mock_cls:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
         mock_crawler = MagicMock()
-        mock_crawler.login.return_value = False
+        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["hits", "u.pythonanywhere.com"])
 
     assert result.exit_code == 1
-    assert "Login failed" in result.output
+    assert "incorrect" in result.output.lower()
 
 
 def test_hits_command_exits_on_login_exception():
@@ -147,18 +147,18 @@ def test_reload_crawler_command_logs_in_and_reloads():
 
 
 def test_reload_crawler_command_exits_on_login_failure():
-    """reload-crawler command exits with error when login returns False."""
+    """reload-crawler command exits with error when login raises."""
     with patch("pa_cli.cli.webapps_cmd.Config.load") as mock_load, \
          patch("pa_cli.cli.webapps_cmd.AccountCrawler") as mock_cls:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
         mock_crawler = MagicMock()
-        mock_crawler.login.return_value = False
+        mock_crawler.login.side_effect = ValueError("Login failed: The user name or password is incorrect.")
         mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["reload-crawler", "u.pythonanywhere.com"])
 
     assert result.exit_code == 1
-    assert "Login failed" in result.output
+    assert "incorrect" in result.output.lower()
 
 
 def test_reload_crawler_command_exits_on_reload_failure():
