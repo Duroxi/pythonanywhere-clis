@@ -7,6 +7,7 @@ from pa_cli.cli.webapps_cmd import app as webapps_app
 from pa_cli.cli.deploy_cmd import app as deploy_app
 from pa_cli.cli.account_cmd import app as account_app
 from pa_cli.cli.register_cmd import app as register_app
+from pa_cli.cli.status_cmd import app as status_app
 
 app = typer.Typer(
     help="CLI tool for automating PythonAnywhere deployments.",
@@ -20,6 +21,7 @@ app.add_typer(webapps_app, name="webapp", help="Manage web apps on PythonAnywher
 app.add_typer(deploy_app, name="deploy", help="Deploy a local project to PythonAnywhere")
 app.add_typer(account_app, name="account", help="Account management")
 app.add_typer(register_app, name="register", help="Register a new PythonAnywhere account")
+app.add_typer(status_app, name="status", help="Query system status and resource usage")
 
 
 if __name__ == "__main__":

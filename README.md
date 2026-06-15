@@ -78,6 +78,12 @@ pa deploy ./my-site
 | `pa deploy <dir>` | One-click deploy to default domain | Token |
 | `pa deploy <dir> --domain <domain>` | One-click deploy to custom domain | Token |
 
+### System Status
+
+| Command | Description | Auth |
+|---------|-------------|------|
+| `pa status cpu` | Show CPU usage | Token |
+
 ## Typical Workflows
 
 ### Deploy a new project

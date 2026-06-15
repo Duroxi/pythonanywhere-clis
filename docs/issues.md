@@ -125,6 +125,16 @@
 
 ---
 
+## 🟢 P3 - 远期改进
+
+### 15. `pa status` 命令
+- **文件**：`pa_cli/api/system.py`、`pa_cli/cli/status_cmd.py`
+- **问题**：README 中标记为已完成，但实际未实现
+- **方案**：创建 SystemClient API 客户端和 status_cmd CLI 命令
+- **状态**：✅
+
+---
+
 ## 📝 修复顺序建议
 
 1. **P0 先修**：安全问题（#1）+ 异常体系（#2）— 这两个是其他修复的基础 ✅
