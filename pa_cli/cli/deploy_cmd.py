@@ -12,6 +12,7 @@ def deploy(
     local_dir: str = typer.Argument(..., help="Local project directory"),
     domain: str = typer.Option(None, "--domain", "-d", help="Domain name (default: {username}.pythonanywhere.com)"),
     python_version: str = typer.Option("python310", "--python", "-p", help="Python version"),
+    dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Preview deploy without executing"),
 ):
     """Deploy a local project to PythonAnywhere."""
     try:
@@ -27,9 +28,11 @@ def deploy(
             host=account["host"],
             domain=domain,
             python_version=python_version,
+            dry_run=dry_run,
         )
 
-        typer.echo(f"\nDeployed! Visit: {url}")
+        if not dry_run:
+            typer.echo(f"\nDeployed! Visit: {url}")
     except PACliError as e:
         typer.echo(f"部署失败: {e}", err=True)
         raise typer.Exit(code=1)

@@ -4,7 +4,7 @@ from pathlib import Path
 import typer
 
 from pa_cli.api.files import FilesClient
-from pa_cli.config import Config
+from pa_cli.cli.utils import get_client
 from pa_cli.exceptions import APIError, NetworkError, NotFoundError
 
 app = typer.Typer(help="Manage files on PythonAnywhere.")
@@ -45,8 +45,7 @@ def ls(
 ):
     """List files and directories on PythonAnywhere."""
     try:
-        account = Config.load(verbose=True)
-        client = FilesClient(token=account["token"], host=account["host"])
+        account, client = get_client(FilesClient)
 
         remote_path = _resolve_path(path, account["username"])
         items = client.list(account["username"], remote_path)
@@ -80,8 +79,7 @@ def download(
 ):
     """Download a file or directory from PythonAnywhere."""
     try:
-        account = Config.load(verbose=True)
-        client = FilesClient(token=account["token"], host=account["host"])
+        account, client = get_client(FilesClient)
 
         resolved = _resolve_path(remote_path, account["username"])
 
@@ -157,8 +155,7 @@ def upload(
         raise typer.Exit(code=1)
 
     try:
-        account = Config.load(verbose=True)
-        client = FilesClient(token=account["token"], host=account["host"])
+        account, client = get_client(FilesClient)
 
         if local.is_file():
             content = local.read_bytes()
@@ -194,8 +191,7 @@ def rm(
 ):
     """Delete a file or directory on PythonAnywhere."""
     try:
-        account = Config.load(verbose=True)
-        client = FilesClient(token=account["token"], host=account["host"])
+        account, client = get_client(FilesClient)
 
         resolved = _resolve_path(path, account["username"])
 

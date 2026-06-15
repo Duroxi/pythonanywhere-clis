@@ -10,12 +10,10 @@ def test_upload_single_file(tmp_path):
     test_file = tmp_path / "test.txt"
     test_file.write_text("hello")
 
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load, \
-         patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
         mock_client = MagicMock()
         mock_client.upload.return_value = 201
-        mock_client_cls.return_value = mock_client
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
 
         result = runner.invoke(app, ["upload", str(test_file), "/home/testuser/test.txt"])
 
@@ -28,12 +26,10 @@ def test_upload_directory_recursive(tmp_path):
     test_dir.mkdir()
     (test_dir / "index.html").write_text("<h1>Hello</h1>")
 
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load, \
-         patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
         mock_client = MagicMock()
         mock_client.upload.return_value = 201
-        mock_client_cls.return_value = mock_client
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
 
         result = runner.invoke(app, ["upload", str(test_dir), "/home/testuser/mysite", "-r"])
 
@@ -42,17 +38,15 @@ def test_upload_directory_recursive(tmp_path):
 
 def test_ls_shows_directory_contents():
     """ls command shows files and directories."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {
-                "app.py": {"type": "file", "url": "..."},
-                "static": {"type": "directory", "url": "..."},
-                "requirements.txt": {"type": "file", "url": "..."},
-            }
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["ls", "mysite"])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {
+            "app.py": {"type": "file", "url": "..."},
+            "static": {"type": "directory", "url": "..."},
+            "requirements.txt": {"type": "file", "url": "..."},
+        }
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["ls", "mysite"])
 
     assert result.exit_code == 0
     assert "app.py" in result.output
@@ -65,13 +59,11 @@ def test_ls_shows_directory_contents():
 
 def test_ls_default_path_is_home():
     """ls without path lists home directory."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {".bashrc": {"type": "file"}}
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["ls"])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {".bashrc": {"type": "file"}}
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["ls"])
 
     assert result.exit_code == 0
     # Should call with /home/testuser/
@@ -81,13 +73,11 @@ def test_ls_default_path_is_home():
 
 def test_ls_empty_directory():
     """ls shows message for empty directory."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {}
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["ls", "emptydir"])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {}
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["ls", "emptydir"])
 
     assert result.exit_code == 0
     assert "(empty directory)" in result.output
@@ -95,13 +85,11 @@ def test_ls_empty_directory():
 
 def test_ls_absolute_path():
     """ls with absolute path uses it directly."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {}
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["ls", "/home/other/"])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {}
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["ls", "/home/other/"])
 
     assert result.exit_code == 0
     call_args = mock_client.list.call_args
@@ -110,15 +98,13 @@ def test_ls_absolute_path():
 
 def test_download_single_file(tmp_path):
     """download command downloads a single file."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {"test.txt": {"type": "file"}}
-            mock_client.download.return_value = b"file content"
-            mock_client_cls.return_value = mock_client
-            local_file = tmp_path / "downloaded.txt"
-            result = runner.invoke(app, ["download", "test.txt", str(local_file)])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {"test.txt": {"type": "file"}}
+        mock_client.download.return_value = b"file content"
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        local_file = tmp_path / "downloaded.txt"
+        result = runner.invoke(app, ["download", "test.txt", str(local_file)])
     assert result.exit_code == 0
     assert "Downloaded" in result.output
     assert local_file.read_bytes() == b"file content"
@@ -126,32 +112,28 @@ def test_download_single_file(tmp_path):
 
 def test_download_requires_recursive_for_dir():
     """download command requires -r for directories."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {"mysite": {"type": "directory"}}
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["download", "mysite"])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {"mysite": {"type": "directory"}}
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["download", "mysite"])
     assert result.exit_code == 1
     assert "recursive" in result.output.lower()
 
 
 def test_download_recursive_directory(tmp_path):
     """download -r downloads entire directory."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.side_effect = [
-                {"mysite": {"type": "directory"}},
-                {"app.py": {"type": "file"}, "static": {"type": "directory"}},
-                {"style.css": {"type": "file"}},
-            ]
-            mock_client.download.return_value = b"content"
-            mock_client_cls.return_value = mock_client
-            local_dir = tmp_path / "downloaded"
-            result = runner.invoke(app, ["download", "mysite", str(local_dir), "-r"])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.side_effect = [
+            {"mysite": {"type": "directory"}},
+            {"app.py": {"type": "file"}, "static": {"type": "directory"}},
+            {"style.css": {"type": "file"}},
+        ]
+        mock_client.download.return_value = b"content"
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        local_dir = tmp_path / "downloaded"
+        result = runner.invoke(app, ["download", "mysite", str(local_dir), "-r"])
     assert result.exit_code == 0
     assert "Downloaded" in result.output
     assert (local_dir / "app.py").exists()
@@ -163,18 +145,15 @@ def test_upload_shows_account_hint(tmp_path):
     local_file = tmp_path / "test.txt"
     local_file.write_text("hello")
 
-    def fake_load(**kwargs):
-        if kwargs.get("verbose", False):
-            import typer as _typer
-            _typer.echo("[account: testuser]")
-        return {"username": "testuser", "token": "t", "host": "h"}
+    def fake_get_client(client_class):
+        import typer as _typer
+        _typer.echo("[account: testuser]")
+        mock_client = MagicMock()
+        mock_client.upload.return_value = 200
+        return {"username": "testuser", "token": "t", "host": "h"}, mock_client
 
-    with patch("pa_cli.cli.files_cmd.Config.load", side_effect=fake_load):
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.upload.return_value = 200
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["upload", str(local_file), "/remote/test.txt"])
+    with patch("pa_cli.cli.files_cmd.get_client", side_effect=fake_get_client):
+        result = runner.invoke(app, ["upload", str(local_file), "/remote/test.txt"])
 
     assert result.exit_code == 0
     assert "[account: testuser]" in result.output
@@ -182,13 +161,11 @@ def test_upload_shows_account_hint(tmp_path):
 
 def test_rm_file():
     """rm command deletes a file after confirmation."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {"old.txt": {"type": "file"}}
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["rm", "old.txt"], input="y\n")
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {"old.txt": {"type": "file"}}
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["rm", "old.txt"], input="y\n")
     assert result.exit_code == 0
     assert "Deleted old.txt" in result.output
     mock_client.delete.assert_called_once()
@@ -196,13 +173,11 @@ def test_rm_file():
 
 def test_rm_file_force():
     """rm -f skips confirmation."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {"old.txt": {"type": "file"}}
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["rm", "old.txt", "-f"])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {"old.txt": {"type": "file"}}
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["rm", "old.txt", "-f"])
     assert result.exit_code == 0
     assert "Deleted" in result.output
     mock_client.delete.assert_called_once()
@@ -210,39 +185,33 @@ def test_rm_file_force():
 
 def test_rm_cancelled():
     """rm cancels when user says no."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {"old.txt": {"type": "file"}}
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["rm", "old.txt"], input="n\n")
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {"old.txt": {"type": "file"}}
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["rm", "old.txt"], input="n\n")
     assert "Cancelled" in result.output
     mock_client.delete.assert_not_called()
 
 
 def test_rm_directory_requires_recursive():
     """rm requires -r for directories."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {"olddir": {"type": "directory"}}
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["rm", "olddir"])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {"olddir": {"type": "directory"}}
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["rm", "olddir"])
     assert result.exit_code == 1
     assert "recursive" in result.output.lower()
 
 
 def test_rm_directory_recursive():
     """rm -rf deletes directory."""
-    with patch("pa_cli.cli.files_cmd.Config.load") as mock_load:
-        mock_load.return_value = {"username": "testuser", "token": "t", "host": "h"}
-        with patch("pa_cli.cli.files_cmd.FilesClient") as mock_client_cls:
-            mock_client = MagicMock()
-            mock_client.list.return_value = {"olddir": {"type": "directory"}}
-            mock_client_cls.return_value = mock_client
-            result = runner.invoke(app, ["rm", "olddir", "-r", "-f"])
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {"olddir": {"type": "directory"}}
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["rm", "olddir", "-r", "-f"])
     assert result.exit_code == 0
     assert "Deleted olddir" in result.output
     assert "recursive" in result.output

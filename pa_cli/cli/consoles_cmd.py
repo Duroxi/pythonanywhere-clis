@@ -1,22 +1,20 @@
+import time
+import uuid
+
 import typer
 
 from pa_cli.api.consoles import ConsolesClient
+from pa_cli.cli.utils import get_client
 from pa_cli.config import Config
 from pa_cli.exceptions import AuthError, NetworkError, NotFoundError
 
 app = typer.Typer(help="Manage consoles on PythonAnywhere.")
 
 
-def _get_client() -> tuple:
-    account = Config.load(verbose=True)
-    client = ConsolesClient(token=account["token"], host=account["host"])
-    return account, client
-
-
 @app.command("list")
 def list_consoles():
     """List all consoles."""
-    account, client = _get_client()
+    account, client = get_client(ConsolesClient)
     consoles = client.list(account["username"])
     if not consoles:
         typer.echo("No consoles found.")
@@ -56,7 +54,7 @@ def create(
     executable: str = typer.Option("bash", help="Console executable"),
 ):
     """Create a new console."""
-    account, client = _get_client()
+    account, client = get_client(ConsolesClient)
     result = client.create(account["username"], executable)
     typer.echo(f"Console created: id={result['id']}, executable={result['executable']}")
 
@@ -66,21 +64,54 @@ def send(
     console_id: int = typer.Argument(..., help="Console ID"),
     command: str = typer.Argument(..., help="Command to send"),
     wait: bool = typer.Option(True, "--wait/--no-wait", "-w/-W", help="Wait for output"),
+    timeout: int = typer.Option(30, "--timeout", "-t", help="Max seconds to wait for output"),
 ):
     """Send input to a console and get output."""
-    import time
-    account, client = _get_client()
-    client.send_input(account["username"], console_id, command + "\n")
+    account, client = get_client(ConsolesClient)
 
     if not wait:
+        client.send_input(account["username"], console_id, command + "\n")
         typer.echo(f"Sent to console {console_id}: {command}")
         return
 
-    # Wait for output
-    time.sleep(1)
-    result = client.get_output(account["username"], console_id)
-    output = result.get("output", "(no output)")
-    typer.echo(output)
+    # Get baseline output before sending command
+    baseline = client.get_output(account["username"], console_id)
+    baseline_output = baseline.get("output", "")
+
+    # Generate unique completion marker
+    marker = f"__PA_DONE_{uuid.uuid4().hex[:8]}__"
+
+    # Send command + marker echo
+    client.send_input(
+        account["username"],
+        console_id,
+        f"{command}\necho {marker}\n",
+    )
+
+    # Poll for marker
+    elapsed = 0.0
+    poll_interval = 0.5
+    while elapsed < timeout:
+        time.sleep(poll_interval)
+        elapsed += poll_interval
+        result = client.get_output(account["username"], console_id)
+        output = result.get("output", "")
+
+        if marker in output and output != baseline_output:
+            # Extract new content (after baseline)
+            new_output = output[len(baseline_output):]
+            # Find and remove marker line
+            lines = new_output.split("\n")
+            user_lines = []
+            for line in lines:
+                if marker in line:
+                    break
+                user_lines.append(line)
+            typer.echo("\n".join(user_lines).strip() or "(no output)")
+            return
+
+    typer.echo("Timeout waiting for command output", err=True)
+    raise typer.Exit(code=1)
 
 
 @app.command("get-or-create")
@@ -114,6 +145,6 @@ def kill(
     console_id: int = typer.Argument(..., help="Console ID"),
 ):
     """Kill a console."""
-    account, client = _get_client()
+    account, client = get_client(ConsolesClient)
     client.kill(account["username"], console_id)
     typer.echo(f"Console {console_id} killed.")

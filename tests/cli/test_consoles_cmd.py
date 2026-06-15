@@ -2,7 +2,7 @@ from unittest.mock import patch, MagicMock
 from typer.testing import CliRunner
 
 from pa_cli.cli.consoles_cmd import app
-from pa_cli.exceptions import AuthError
+from pa_cli.exceptions import AuthError, NetworkError
 
 runner = CliRunner()
 
@@ -92,16 +92,62 @@ def test_console_create():
     assert "42" in result.output
 
 
-def test_console_send():
+def test_console_send_no_wait():
+    """send with --no-wait sends input and returns immediately."""
     with patch("pa_cli.cli.consoles_cmd.Config.load") as mock_load, \
          patch("pa_cli.cli.consoles_cmd.ConsolesClient") as mock_cls:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
         mock_client = MagicMock()
         mock_cls.return_value = mock_client
 
+        result = runner.invoke(app, ["send", "42", "ls", "--no-wait"])
+
+    assert result.exit_code == 0
+    assert "Sent to console 42: ls" in result.output
+    mock_client.send_input.assert_called_once_with("u", 42, "ls\n")
+
+
+def test_console_send_with_output():
+    """send waits for marker and extracts output before it."""
+    with patch("pa_cli.cli.consoles_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.consoles_cmd.ConsolesClient") as mock_cls, \
+         patch("pa_cli.cli.consoles_cmd.time.sleep"), \
+         patch("pa_cli.cli.consoles_cmd.uuid.uuid4") as mock_uuid:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
+        mock_client = MagicMock()
+        mock_cls.return_value = mock_client
+        mock_uuid.return_value = MagicMock(hex="abc123456789")
+
+        # First call: baseline (empty), second call: output with marker
+        mock_client.get_output.side_effect = [
+            {"output": ""},  # baseline
+            {"output": "$ ls\nfile1.txt\nfile2.txt\n__PA_DONE_abc12345__\n$ "},  # result
+        ]
+
         result = runner.invoke(app, ["send", "42", "ls"])
 
     assert result.exit_code == 0
+    assert "file1.txt" in result.output
+    assert "file2.txt" in result.output
+    assert "PA_DONE" not in result.output
+
+
+def test_console_send_timeout():
+    """send exits with error when timeout reached without marker."""
+    with patch("pa_cli.cli.consoles_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.consoles_cmd.ConsolesClient") as mock_cls, \
+         patch("pa_cli.cli.consoles_cmd.time.sleep"):
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
+        mock_client = MagicMock()
+        mock_cls.return_value = mock_client
+
+        # Always return output without marker
+        mock_client.get_output.return_value = {"output": "$ still running...\n"}
+
+        result = runner.invoke(app, ["send", "42", "sleep 10", "--timeout", "2"])
+
+    assert result.exit_code == 1
+    assert "Timeout" in result.output
 
 
 def test_console_kill():

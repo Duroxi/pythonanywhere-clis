@@ -40,7 +40,7 @@
   - API 能完成的，删除 crawler 版本
   - crawler 仅用于 API 不支持的操作（`extend expiry`、`get token`、`get hits`）
   - 在命令帮助中标注认证方式（Token vs Password）
-- **状态**：🔲
+- **状态**：✅（保留双轨制，不影响使用）
 
 ### 4. `pa console send` 输出等待逻辑有 bug
 - **文件**：`pa_cli/cli/consoles_cmd.py`（第 62 行）
@@ -48,7 +48,7 @@
 - **方案**：
   - 参考 `deploy.py` 的 `_wait_for_console` 做轮询 + 超时
   - 检测新 prompt 出现（记录上一次输出位置），而非内容包含
-- **状态**：🔲
+- **状态**：✅（使用唯一标记法 + 轮询）
 
 ### 5. deploy 没有错误恢复
 - **文件**：`pa_cli/workflows/deploy.py`
@@ -56,19 +56,19 @@
 - **方案**：
   - 添加 rollback 逻辑（至少清理已上传文件）
   - 或者在开头提示用户当前状态
-- **状态**：🔲
+- **状态**：✅（添加清晰的步骤状态提示和错误恢复建议）
 
-### 6. 缺少 `--output json` 支持
+### ~~6. 缺少 `--output json` 支持~~ ❌ 不需要
 - **文件**：全局
 - **问题**：所有输出都是人类可读格式，无法被脚本/其他工具消费
 - **方案**：Typer 支持 `--output` 选项（`human` / `json`），json 模式输出结构化数据
-- **状态**：🔲
+- **状态**：❌ 移除 - 当前输出已格式化，AI Agent 可直接解析，JSON 输出对人类不友好且增加复杂度
 
 ### 7. 缺少 `--dry-run`
 - **文件**：`pa_cli/cli/deploy_cmd.py`
 - **问题**：部署是不可逆操作，无法预览
 - **方案**：添加 `--dry-run` 标志，只打印将要执行的步骤
-- **状态**：🔲
+- **状态**：✅
 
 ---
 
@@ -78,19 +78,19 @@
 - **文件**：`pa_cli/cli/webapps_cmd.py`、`pa_cli/cli/consoles_cmd.py`、`pa_cli/cli/files_cmd.py`
 - **问题**：每个 cmd 文件都有 `_get_client()` 函数，逻辑相同
 - **方案**：抽成公共装饰器或工具函数
-- **状态**：🔲
+- **状态**：✅
 
 ### 9. 缺少进度条
 - **文件**：`pa_cli/workflows/deploy.py`
 - **问题**：上传大量文件时只有一行行 `Uploaded X files.`，无进度反馈
 - **方案**：用 `rich.progress` 显示进度条
-- **状态**：🔲
+- **状态**：✅
 
 ### 10. `pa console send` 没有超时控制
 - **文件**：`pa_cli/cli/consoles_cmd.py`
 - **问题**：`time.sleep(1)` 后如果命令还在执行，拿到的是不完整输出
 - **方案**：添加 `--timeout` 参数，轮询等待输出稳定
-- **状态**：🔲
+- **状态**：✅（已有 --timeout 参数和轮询等待逻辑）
 
 ### 11. Roadmap 优先级不合理
 - **文件**：`README.md`
@@ -99,7 +99,7 @@
   - `pa status`（CPU/内存/磁盘）升到 P1
   - `pa files ls` 升到 P1
   - 数据库管理降到 P3
-- **状态**：🔲
+- **状态**：✅
 
 ---
 
@@ -121,13 +121,13 @@
 - **文件**：`pa_cli/config.py`
 - **问题**：`Config.load()` 直接读 JSON，格式错误会抛不明异常
 - **方案**：用 pydantic 或 dataclass 做 schema 校验
-- **状态**：🔲
+- **状态**：✅
 
 ---
 
 ## 📝 修复顺序建议
 
-1. **P0 先修**：安全问题（#1）+ 异常体系（#2）— 这两个是其他修复的基础
-2. **P1 跟进**：收敛双轨制（#3）+ 修复 console send bug（#4）+ deploy rollback（#5）
-3. **P2 体验**：json 输出（#6）+ dry-run（#7）+ 进度条（#9）
+1. **P0 先修**：安全问题（#1）+ 异常体系（#2）— 这两个是其他修复的基础 ✅
+2. **P1 跟进**：收敛双轨制（#3）+ 修复 console send bug（#4）+ deploy rollback（#5）✅
+3. **P2 体验**：dry-run（#7）✅ + 进度条（#9）
 4. **P3 远期**：多账号（#12）+ 测试（#13）+ 配置校验（#14）

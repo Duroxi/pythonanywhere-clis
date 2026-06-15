@@ -2,11 +2,77 @@ import base64
 import hashlib
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 import typer
 
 CONFIG_PATH = Path.home() / ".pa-cli" / "config.json"
+
+
+@dataclass
+class AccountConfig:
+    username: str
+    token: str
+    host: str = "www.pythonanywhere.com"
+    password: str | None = None
+    password_enc: str | None = None
+
+
+@dataclass
+class ConfigData:
+    accounts: list[AccountConfig]
+    default_account: str
+
+
+def _validate_config(data: dict) -> ConfigData:
+    """Validate config data and return ConfigData. Raises ValueError on invalid data."""
+    if not isinstance(data, dict):
+        raise ValueError("Config must be a JSON object")
+
+    if "accounts" not in data:
+        raise ValueError("Config missing 'accounts' field")
+
+    if not isinstance(data["accounts"], list):
+        raise ValueError("'accounts' must be a list")
+
+    accounts = []
+    for i, acc in enumerate(data["accounts"]):
+        if not isinstance(acc, dict):
+            raise ValueError(f"Account {i} must be an object")
+
+        if "username" not in acc:
+            raise ValueError(f"Account {i} missing 'username' field")
+
+        if not isinstance(acc["username"], str) or not acc["username"]:
+            raise ValueError(f"Account {i} 'username' must be a non-empty string")
+
+        if "token" not in acc:
+            raise ValueError(f"Account {i} missing 'token' field")
+
+        if not isinstance(acc["token"], str):
+            raise ValueError(f"Account {i} 'token' must be a string")
+
+        host = acc.get("host", "www.pythonanywhere.com")
+        if not isinstance(host, str):
+            raise ValueError(f"Account {i} 'host' must be a string")
+
+        account_kwargs = {
+            "username": acc["username"],
+            "token": acc["token"],
+            "host": host,
+        }
+        if "password" in acc:
+            account_kwargs["password"] = acc["password"]
+        if "password_enc" in acc:
+            account_kwargs["password_enc"] = acc["password_enc"]
+        accounts.append(AccountConfig(**account_kwargs))
+
+    default_account = data.get("default_account", "")
+    if not isinstance(default_account, str):
+        raise ValueError("'default_account' must be a string")
+
+    return ConfigData(accounts=accounts, default_account=default_account)
 
 
 def _get_machine_key() -> bytes:
@@ -35,11 +101,16 @@ def _decrypt_account(account: dict) -> dict:
     """Decrypt password in account dict. Handles both encrypted and legacy plaintext."""
     account = dict(account)
     if "password_enc" in account:
-        try:
-            account["password"] = _decrypt(account["password_enc"])
-        except Exception:
-            account["password"] = None
+        if account["password_enc"] is not None:
+            try:
+                account["password"] = _decrypt(account["password_enc"])
+            except Exception:
+                account["password"] = None
         del account["password_enc"]
+    # Keep legacy plaintext password as-is (already in account["password"])
+    # Remove password field if it's None (backward compatibility)
+    if "password" in account and account["password"] is None:
+        del account["password"]
     return account
 
 
@@ -54,7 +125,10 @@ class Config:
         CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
         if CONFIG_PATH.exists():
-            data = json.loads(CONFIG_PATH.read_text())
+            try:
+                data = json.loads(CONFIG_PATH.read_text())
+            except json.JSONDecodeError:
+                data = {"accounts": [], "default_account": username or ""}
         else:
             data = {"accounts": [], "default_account": username or ""}
 
@@ -102,23 +176,30 @@ class Config:
         if not CONFIG_PATH.exists():
             raise FileNotFoundError(f"Config not found. Run 'pa init' first.")
 
-        data = json.loads(CONFIG_PATH.read_text())
+        try:
+            raw_data = json.loads(CONFIG_PATH.read_text())
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in config file: {e}")
+
+        try:
+            config = _validate_config(raw_data)
+        except ValueError as e:
+            raise ValueError(f"Invalid config format: {e}")
 
         if username:
-            for account in data["accounts"]:
-                if account["username"] == username:
+            for account in config.accounts:
+                if account.username == username:
                     if verbose:
                         typer.echo(f"[account: {username}]")
-                    return _decrypt_account(account)
+                    return _decrypt_account(vars(account))
             raise ValueError(f"Account '{username}' not found in config.")
 
         # Return default account
-        default = data.get("default_account")
-        for account in data["accounts"]:
-            if account["username"] == default:
+        for account in config.accounts:
+            if account.username == config.default_account:
                 if verbose:
-                    typer.echo(f"[account: {default}]")
-                return _decrypt_account(account)
+                    typer.echo(f"[account: {config.default_account}]")
+                return _decrypt_account(vars(account))
 
         raise ValueError("No default account configured.")
 
@@ -126,14 +207,20 @@ class Config:
     def list_accounts() -> list[dict]:
         if not CONFIG_PATH.exists():
             return []
-        data = json.loads(CONFIG_PATH.read_text())
+        try:
+            data = json.loads(CONFIG_PATH.read_text())
+        except json.JSONDecodeError:
+            return []
         return data.get("accounts", [])
 
     @staticmethod
     def set_default(username: str) -> None:
         if not CONFIG_PATH.exists():
             raise FileNotFoundError(f"Config not found. Run 'pa init' first.")
-        data = json.loads(CONFIG_PATH.read_text())
+        try:
+            data = json.loads(CONFIG_PATH.read_text())
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in config file: {e}")
         found = any(a["username"] == username for a in data.get("accounts", []))
         if not found:
             raise ValueError(f"Account '{username}' not found in config.")
@@ -144,7 +231,10 @@ class Config:
     def remove(username: str) -> str | None:
         if not CONFIG_PATH.exists():
             raise FileNotFoundError(f"Config not found. Run 'pa init' first.")
-        data = json.loads(CONFIG_PATH.read_text())
+        try:
+            data = json.loads(CONFIG_PATH.read_text())
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in config file: {e}")
         found = [i for i, a in enumerate(data.get("accounts", [])) if a["username"] == username]
         if not found:
             raise ValueError(f"Account '{username}' not found in config.")
