@@ -73,6 +73,7 @@ pa deploy ./my-site
 | `pa webapp delete <domain>` | Delete a web app | Token |
 | `pa webapp enable <domain>` | Enable a web app | Token |
 | `pa webapp disable <domain>` | Disable a web app | Token |
+| `pa webapp logs <domain>` | Show web app logs | Token |
 
 ### Deployment
 

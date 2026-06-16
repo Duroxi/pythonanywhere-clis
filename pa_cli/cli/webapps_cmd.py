@@ -2,6 +2,7 @@ import re
 
 import typer
 
+from pa_cli.api.files import FilesClient
 from pa_cli.api.webapps import WebappsClient
 from pa_cli.cli.utils import get_client
 from pa_cli.config import Config
@@ -194,6 +195,43 @@ def disable(
         account, client = get_client(WebappsClient)
         client.disable(account["username"], domain_name)
         typer.echo(f"Webapp {domain_name} disabled.")
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"资源不存在: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def logs(
+    domain_name: str = typer.Argument(None, help="Domain name (default: {username}.pythonanywhere.com)"),
+    log_type: str = typer.Option("error", "--type", "-t", help="Log type: access, error, or server"),
+    lines: int = typer.Option(50, "--lines", "-n", help="Number of lines to show"),
+):
+    """Show web app logs."""
+    try:
+        account, client = get_client(FilesClient)
+        if domain_name is None:
+            domain_name = f"{account['username']}.pythonanywhere.com"
+
+        # Extract subdomain from domain_name (lowercase)
+        subdomain = domain_name.split(".")[0].lower()
+        log_file = f"/var/log/{subdomain}.pythonanywhere.com.{log_type}.log"
+
+        try:
+            content = client.download(account["username"], log_file)
+            text = content.decode("utf-8", errors="ignore")
+            # Show last N lines
+            all_lines = text.strip().split("\n")
+            for line in all_lines[-lines:]:
+                typer.echo(line)
+        except NotFoundError:
+            typer.echo(f"Log file not found: {log_file}", err=True)
+            raise typer.Exit(code=1)
     except AuthError as e:
         typer.echo(f"认证失败: {e}", err=True)
         raise typer.Exit(code=1)

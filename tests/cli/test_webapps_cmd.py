@@ -251,3 +251,63 @@ def test_webapp_disable():
     assert result.exit_code == 0
     assert "disabled" in result.output.lower()
     mock_client.disable.assert_called_once_with("u", "u.pythonanywhere.com")
+
+
+# --- logs command tests ---
+
+
+def test_webapp_logs():
+    """logs command shows error logs by default."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.download.return_value = b"line1\nline2\nline3\n"
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["logs"])
+
+    assert result.exit_code == 0
+    assert "line1" in result.output
+    assert "line2" in result.output
+    mock_client.download.assert_called_once_with("u", "/var/log/u.pythonanywhere.com.error.log")
+
+
+def test_webapp_logs_with_type():
+    """logs command shows specified log type."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.download.return_value = b"access log content\n"
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["logs", "--type", "access"])
+
+    assert result.exit_code == 0
+    assert "access log content" in result.output
+    mock_client.download.assert_called_once_with("u", "/var/log/u.pythonanywhere.com.access.log")
+
+
+def test_webapp_logs_with_domain():
+    """logs command shows logs for specified domain."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.download.return_value = b"log content\n"
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["logs", "myapp.pythonanywhere.com"])
+
+    assert result.exit_code == 0
+    mock_client.download.assert_called_once_with("u", "/var/log/myapp.pythonanywhere.com.error.log")
+
+
+def test_webapp_logs_file_not_found():
+    """logs command shows error when log file not found."""
+    from pa_cli.exceptions import NotFoundError
+
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.download.side_effect = NotFoundError("File not found")
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["logs"])
+
+    assert result.exit_code == 1
+    assert "Log file not found" in result.output
