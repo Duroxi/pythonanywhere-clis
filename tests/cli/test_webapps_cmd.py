@@ -191,3 +191,63 @@ def test_reload_crawler_command_exits_on_login_exception():
 
     assert result.exit_code == 1
     assert "Password not found" in result.output
+
+
+# --- delete command tests ---
+
+
+def test_webapp_delete_with_force():
+    """delete command deletes webapp with --force flag."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["delete", "u.pythonanywhere.com", "-f"])
+
+    assert result.exit_code == 0
+    assert "deleted" in result.output.lower()
+    mock_client.delete.assert_called_once_with("u", "u.pythonanywhere.com")
+
+
+def test_webapp_delete_cancelled():
+    """delete command cancels when user says no."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["delete", "u.pythonanywhere.com"], input="n\n")
+
+    assert "Cancelled" in result.output
+    mock_client.delete.assert_not_called()
+
+
+# --- enable command tests ---
+
+
+def test_webapp_enable():
+    """enable command enables webapp."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["enable", "u.pythonanywhere.com"])
+
+    assert result.exit_code == 0
+    assert "enabled" in result.output.lower()
+    mock_client.enable.assert_called_once_with("u", "u.pythonanywhere.com")
+
+
+# --- disable command tests ---
+
+
+def test_webapp_disable():
+    """disable command disables webapp."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["disable", "u.pythonanywhere.com"])
+
+    assert result.exit_code == 0
+    assert "disabled" in result.output.lower()
+    mock_client.disable.assert_called_once_with("u", "u.pythonanywhere.com")

@@ -19,6 +19,30 @@ class WebappsClient(BaseClient):
             json=kwargs,
         )
 
+    def delete(self, username: str, domain_name: str) -> None:
+        self._request(
+            "DELETE",
+            "/api/v0/user/{username}/webapps/{domain_name}/",
+            username=username,
+            domain_name=domain_name,
+        )
+
+    def enable(self, username: str, domain_name: str) -> None:
+        self._request(
+            "POST",
+            "/api/v0/user/{username}/webapps/{domain_name}/enable/",
+            username=username,
+            domain_name=domain_name,
+        )
+
+    def disable(self, username: str, domain_name: str) -> None:
+        self._request(
+            "POST",
+            "/api/v0/user/{username}/webapps/{domain_name}/disable/",
+            username=username,
+            domain_name=domain_name,
+        )
+
     def add_static_file(self, username: str, domain_name: str, url: str, path: str) -> None:
         self._request(
             "POST",

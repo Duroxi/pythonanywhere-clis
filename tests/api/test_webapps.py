@@ -47,3 +47,51 @@ def test_reload_webapp():
 
     with patch.object(client, "_request", return_value=mock_resp):
         client.reload("testuser", "testuser.pythonanywhere.com")
+
+
+def test_delete_webapp():
+    client = WebappsClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        client.delete("testuser", "testuser.pythonanywhere.com")
+
+    mock_req.assert_called_once_with(
+        "DELETE",
+        "/api/v0/user/{username}/webapps/{domain_name}/",
+        username="testuser",
+        domain_name="testuser.pythonanywhere.com",
+    )
+
+
+def test_enable_webapp():
+    client = WebappsClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        client.enable("testuser", "testuser.pythonanywhere.com")
+
+    mock_req.assert_called_once_with(
+        "POST",
+        "/api/v0/user/{username}/webapps/{domain_name}/enable/",
+        username="testuser",
+        domain_name="testuser.pythonanywhere.com",
+    )
+
+
+def test_disable_webapp():
+    client = WebappsClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        client.disable("testuser", "testuser.pythonanywhere.com")
+
+    mock_req.assert_called_once_with(
+        "POST",
+        "/api/v0/user/{username}/webapps/{domain_name}/disable/",
+        username="testuser",
+        domain_name="testuser.pythonanywhere.com",
+    )

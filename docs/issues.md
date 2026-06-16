@@ -135,6 +135,16 @@
 
 ---
 
+## 🟢 P3 - 远期改进
+
+### 16. `pa webapp delete/enable/disable` 命令
+- **文件**：`pa_cli/api/webapps.py`、`pa_cli/cli/webapps_cmd.py`
+- **问题**：Webapp 管理命令缺失
+- **方案**：添加 delete、enable、disable 命令
+- **状态**：✅（enable/disable 返回 403，免费账户权限限制）
+
+---
+
 ## 📝 修复顺序建议
 
 1. **P0 先修**：安全问题（#1）+ 异常体系（#2）— 这两个是其他修复的基础 ✅

@@ -137,3 +137,69 @@ def reload_crawler(
     except NotFoundError as e:
         typer.echo(f"资源不存在: {e}", err=True)
         raise typer.Exit(code=1)
+
+
+@app.command()
+def delete(
+    domain_name: str = typer.Argument(..., help="Domain name"),
+    force: bool = typer.Option(False, "-f", "--force", help="Skip confirmation"),
+):
+    """Delete a web app."""
+    try:
+        account, client = get_client(WebappsClient)
+        if not force:
+            confirm = typer.confirm(f"Are you sure you want to delete {domain_name}?")
+            if not confirm:
+                typer.echo("Cancelled.")
+                raise typer.Exit()
+        client.delete(account["username"], domain_name)
+        typer.echo(f"Webapp {domain_name} deleted.")
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"资源不存在: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def enable(
+    domain_name: str = typer.Argument(..., help="Domain name"),
+):
+    """Enable a web app."""
+    try:
+        account, client = get_client(WebappsClient)
+        client.enable(account["username"], domain_name)
+        typer.echo(f"Webapp {domain_name} enabled.")
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"资源不存在: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def disable(
+    domain_name: str = typer.Argument(..., help="Domain name"),
+):
+    """Disable a web app."""
+    try:
+        account, client = get_client(WebappsClient)
+        client.disable(account["username"], domain_name)
+        typer.echo(f"Webapp {domain_name} disabled.")
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"资源不存在: {e}", err=True)
+        raise typer.Exit(code=1)

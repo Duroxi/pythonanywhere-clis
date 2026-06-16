@@ -70,6 +70,9 @@ pa deploy ./my-site
 | `pa webapp reload <domain>` | Reload web app (API) | Token |
 | `pa webapp reload-crawler <domain>` | Reload web app (crawler) | Password |
 | `pa webapp hits <domain>` | Get hit statistics | Password |
+| `pa webapp delete <domain>` | Delete a web app | Token |
+| `pa webapp enable <domain>` | Enable a web app | Token |
+| `pa webapp disable <domain>` | Disable a web app | Token |
 
 ### Deployment
 
