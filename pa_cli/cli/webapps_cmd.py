@@ -172,9 +172,14 @@ def enable(
 ):
     """Enable a web app."""
     try:
-        account, client = get_client(WebappsClient)
-        client.enable(account["username"], domain_name)
-        typer.echo(f"Webapp {domain_name} enabled.")
+        account = Config.load(verbose=True)
+        crawler = AccountCrawler()
+        crawler.login()
+        if crawler.enable_webapp(domain_name):
+            typer.echo(f"Webapp {domain_name} enabled.")
+        else:
+            typer.echo(f"Failed to enable webapp {domain_name}.", err=True)
+            raise typer.Exit(code=1)
     except AuthError as e:
         typer.echo(f"认证失败: {e}", err=True)
         raise typer.Exit(code=1)
@@ -192,9 +197,14 @@ def disable(
 ):
     """Disable a web app."""
     try:
-        account, client = get_client(WebappsClient)
-        client.disable(account["username"], domain_name)
-        typer.echo(f"Webapp {domain_name} disabled.")
+        account = Config.load(verbose=True)
+        crawler = AccountCrawler()
+        crawler.login()
+        if crawler.disable_webapp(domain_name):
+            typer.echo(f"Webapp {domain_name} disabled.")
+        else:
+            typer.echo(f"Failed to disable webapp {domain_name}.", err=True)
+            raise typer.Exit(code=1)
     except AuthError as e:
         typer.echo(f"认证失败: {e}", err=True)
         raise typer.Exit(code=1)

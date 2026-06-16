@@ -225,32 +225,42 @@ def test_webapp_delete_cancelled():
 
 
 def test_webapp_enable():
-    """enable command enables webapp."""
-    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
-        mock_client = MagicMock()
-        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+    """enable command enables webapp via crawler."""
+    with patch("pa_cli.cli.webapps_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.webapps_cmd.AccountCrawler") as mock_cls:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
+        mock_crawler = MagicMock()
+        mock_crawler.login.return_value = True
+        mock_crawler.enable_webapp.return_value = True
+        mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["enable", "u.pythonanywhere.com"])
 
     assert result.exit_code == 0
     assert "enabled" in result.output.lower()
-    mock_client.enable.assert_called_once_with("u", "u.pythonanywhere.com")
+    mock_crawler.login.assert_called_once()
+    mock_crawler.enable_webapp.assert_called_once_with("u.pythonanywhere.com")
 
 
 # --- disable command tests ---
 
 
 def test_webapp_disable():
-    """disable command disables webapp."""
-    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
-        mock_client = MagicMock()
-        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+    """disable command disables webapp via crawler."""
+    with patch("pa_cli.cli.webapps_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.webapps_cmd.AccountCrawler") as mock_cls:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
+        mock_crawler = MagicMock()
+        mock_crawler.login.return_value = True
+        mock_crawler.disable_webapp.return_value = True
+        mock_cls.return_value = mock_crawler
 
         result = runner.invoke(app, ["disable", "u.pythonanywhere.com"])
 
     assert result.exit_code == 0
     assert "disabled" in result.output.lower()
-    mock_client.disable.assert_called_once_with("u", "u.pythonanywhere.com")
+    mock_crawler.login.assert_called_once()
+    mock_crawler.disable_webapp.assert_called_once_with("u.pythonanywhere.com")
 
 
 # --- logs command tests ---

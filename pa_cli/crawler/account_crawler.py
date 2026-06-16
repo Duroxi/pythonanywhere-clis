@@ -293,3 +293,65 @@ class AccountCrawler:
             raise NetworkError(f"Failed to fetch hits: {e}") from e
 
         return resp.json()
+
+    def enable_webapp(self, domain: str, username: str | None = None) -> bool:
+        """Enable a web app via web form."""
+        resolved = username or self.username
+        webapps_url = f"{self.base_url}/user/{resolved}/webapps/"
+
+        try:
+            resp = self.session.get(webapps_url)
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise NetworkError(f"Failed to fetch webapps page: {e}") from e
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        enable_form = soup.find("form", action=lambda a: a and "enable" in a)
+        if enable_form is None:
+            raise NotFoundError("Enable form not found (webapp may already be enabled)")
+
+        csrf_input = enable_form.find("input", {"name": "csrfmiddlewaretoken"})
+        if csrf_input is None:
+            raise APIError("CSRF token not found in enable form")
+
+        enable_url = f"{self.base_url}{enable_form['action']}"
+        data = {"csrfmiddlewaretoken": csrf_input["value"]}
+        headers = {"Referer": webapps_url}
+
+        try:
+            enable_resp = self.session.post(enable_url, data=data, headers=headers)
+        except requests.RequestException as e:
+            raise NetworkError(f"Enable request failed: {e}") from e
+
+        return enable_resp.status_code in (200, 302)
+
+    def disable_webapp(self, domain: str, username: str | None = None) -> bool:
+        """Disable a web app via web form."""
+        resolved = username or self.username
+        webapps_url = f"{self.base_url}/user/{resolved}/webapps/"
+
+        try:
+            resp = self.session.get(webapps_url)
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise NetworkError(f"Failed to fetch webapps page: {e}") from e
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        disable_form = soup.find("form", action=lambda a: a and "disable" in a)
+        if disable_form is None:
+            raise NotFoundError("Disable form not found (webapp may already be disabled)")
+
+        csrf_input = disable_form.find("input", {"name": "csrfmiddlewaretoken"})
+        if csrf_input is None:
+            raise APIError("CSRF token not found in disable form")
+
+        disable_url = f"{self.base_url}{disable_form['action']}"
+        data = {"csrfmiddlewaretoken": csrf_input["value"]}
+        headers = {"Referer": webapps_url}
+
+        try:
+            disable_resp = self.session.post(disable_url, data=data, headers=headers)
+        except requests.RequestException as e:
+            raise NetworkError(f"Disable request failed: {e}") from e
+
+        return disable_resp.status_code in (200, 302)

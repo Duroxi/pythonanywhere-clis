@@ -860,3 +860,74 @@ def test_get_hits_explicit_username_overrides_self():
         crawler.get_hits("otheruser.pythonanywhere.com", "otheruser")
 
     assert "otheruser" in mock_get.call_args[0][0]
+
+
+# --- enable_webapp / disable_webapp tests ---
+
+WEBAPPS_PAGE_WITH_DISABLE_FORM = """
+<html>
+<body>
+<form action="/user/configuser/webapps/configuser.pythonanywhere.com/disable" method="POST">
+    <input type="hidden" name="csrfmiddlewaretoken" value="test-csrf-token">
+</form>
+</body>
+</html>
+"""
+
+WEBAPPS_PAGE_WITH_ENABLE_FORM = """
+<html>
+<body>
+<form action="/user/configuser/webapps/configuser.pythonanywhere.com/enable" method="POST">
+    <input type="hidden" name="csrfmiddlewaretoken" value="test-csrf-token">
+</form>
+</body>
+</html>
+"""
+
+
+def test_disable_webapp():
+    """disable_webapp sends POST to disable form action."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(WEBAPPS_PAGE_WITH_DISABLE_FORM)), \
+         patch.object(crawler.session, "post", return_value=_mock_post_response(
+             "https://www.pythonanywhere.com/user/configuser/webapps/"
+         )) as mock_post:
+        result = crawler.disable_webapp("configuser.pythonanywhere.com")
+
+    assert result is True
+    mock_post.assert_called_once()
+    assert "disable" in mock_post.call_args[0][0]
+
+
+def test_enable_webapp():
+    """enable_webapp sends POST to enable form action."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(WEBAPPS_PAGE_WITH_ENABLE_FORM)), \
+         patch.object(crawler.session, "post", return_value=_mock_post_response(
+             "https://www.pythonanywhere.com/user/configuser/webapps/"
+         )) as mock_post:
+        result = crawler.enable_webapp("configuser.pythonanywhere.com")
+
+    assert result is True
+    mock_post.assert_called_once()
+    assert "enable" in mock_post.call_args[0][0]
+
+
+def test_disable_webapp_raises_when_already_disabled():
+    """disable_webapp raises NotFoundError when disable form not found."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(WEBAPPS_PAGE_WITH_ENABLE_FORM)):
+        with pytest.raises(NotFoundError, match="Disable form not found"):
+            crawler.disable_webapp("configuser.pythonanywhere.com")
+
+
+def test_enable_webapp_raises_when_already_enabled():
+    """enable_webapp raises NotFoundError when enable form not found."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(WEBAPPS_PAGE_HTML)):
+        with pytest.raises(NotFoundError, match="Enable form not found"):
+            crawler.enable_webapp("configuser.pythonanywhere.com")
