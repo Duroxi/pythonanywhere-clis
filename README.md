@@ -211,13 +211,11 @@ pytest tests/test_account_crawler.py
 - [x] Multi-account management (`pa account switch`)
 - [x] CPU usage query (`pa status`)
 
-### 🔲 Planned (P2)
+### ✅ Completed (P2)
 
-- [ ] Log management (`pa webapp logs`)
-- [ ] Webapp enable/disable (`pa webapp enable/disable`)
-- [ ] Batch operations (`pa batch`)
-- [ ] SSL management (`pa webapp ssl`)
-- [ ] Delete webapp (`pa webapp delete`)
+- [x] Log management (`pa webapp logs`)
+- [x] Webapp enable/disable (`pa webapp enable/disable`)
+- [x] Delete webapp (`pa webapp delete`)
 
 ### 🔲 Planned (P3)
 
@@ -227,6 +225,7 @@ pytest tests/test_account_crawler.py
 - [ ] System configuration (`pa config`)
 - [ ] Database info (`pa databases`)
 - [ ] File sharing (`pa files share`)
+- [ ] SSL management (`pa webapp ssl`)
 
 ## License
 
