@@ -49,6 +49,7 @@ pa deploy ./my-site
 | `pa files upload <local> <remote> -r` | Upload directory recursively | Token |
 | `pa files share <path>` | Share a file and get link | Token |
 | `pa files unshare <path>` | Stop sharing a file | Token |
+| `pa files share-status <path>` | Check if a file is shared | Token |
 
 ### Console Management
 

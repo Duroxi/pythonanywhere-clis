@@ -281,3 +281,36 @@ def test_unshare_file_not_found():
 
     assert result.exit_code == 1
     assert "文件不存在或未分享" in result.output
+
+
+# --- share-status command tests ---
+
+
+def test_share_status_when_shared():
+    """share-status shows link when file is shared."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_share_status.return_value = "/user/testuser/shares/abc123/"
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["share-status", "test.txt"])
+
+    assert result.exit_code == 0
+    assert "File is shared" in result.output
+    assert "abc123" in result.output
+    mock_client.get_share_status.assert_called_once_with("testuser", "/home/testuser/test.txt/")
+
+
+def test_share_status_when_not_shared():
+    """share-status shows message when file is not shared."""
+    from pa_cli.exceptions import NotFoundError
+
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_share_status.side_effect = NotFoundError("Not found")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["share-status", "test.txt"])
+
+    assert result.exit_code == 0
+    assert "File is not shared" in result.output

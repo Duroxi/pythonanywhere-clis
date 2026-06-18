@@ -276,3 +276,24 @@ def unshare(
     except APIError as e:
         typer.echo(f"API 错误: {e}", err=True)
         raise typer.Exit(code=1)
+
+
+@app.command("share-status")
+def share_status(
+    remote_path: str = typer.Argument(..., help="Remote path to check"),
+):
+    """Check if a file is shared."""
+    try:
+        account, client = get_client(FilesClient)
+        resolved = _resolve_path(remote_path, account["username"])
+        share_url = client.get_share_status(account["username"], resolved)
+        full_url = f"https://www.pythonanywhere.com{share_url}"
+        typer.echo(f"File is shared: {full_url}")
+    except NotFoundError:
+        typer.echo(f"File is not shared: {remote_path}")
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except APIError as e:
+        typer.echo(f"API 错误: {e}", err=True)
+        raise typer.Exit(code=1)
