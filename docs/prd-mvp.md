@@ -6,23 +6,25 @@
 
 MVP 聚焦最小闭环：**有账号 → 上传代码 → 创建网站 → 可访问**。
 
+**当前状态**: MVP 已完成，共实现 48 个命令，277+ 测试通过。
+
 ## 2. MVP 功能范围
 
 ### 2.1 包含
 
-| 功能 | CLI 命令 | 说明 |
-|------|----------|------|
-| 账号配置 | `pa init` | 交互式输入用户名和 API Token，保存到 `~/.pa-cli/config.json` |
-| 上传文件 | `pa files upload <本地路径> <远程路径> [-r]` | 单文件上传，`-r` 递归上传目录 |
-| 创建 Console | `pa console create [--executable <路径>]` | 默认创建 Bash Console，可通过 `--executable` 指定 |
-| 发送命令 | `pa console send <id> <命令>` | 向 Console 发送输入 |
-| 获取输出 | `pa console output <id>` | 读取 Console 输出 |
-| 销毁 Console | `pa console kill <id>` | 终止 Console |
-| 创建 Webapp | `pa webapp create <域名> --python <版本>` | 创建 Web 应用 |
-| 配置 Webapp | `pa webapp config <域名> --source-dir <路径> [--virtualenv <路径>]` | 设置源码目录（必需）和虚拟环境路径（可选） |
-| 添加静态映射 | `pa webapp static <域名> --url --path` | 添加 URL 到目录的映射 |
-| 重载 Webapp | `pa webapp reload <域名>` | 重新加载应用 |
-| 一键部署 | `pa deploy <本地目录> [--domain <域名>]` | 自动完成上传+环境配置+Webapp创建+重载。域名默认 `{username}.pythonanywhere.com` |
+| 功能 | CLI 命令 | 说明 | 状态 |
+|------|----------|------|------|
+| 账号配置 | `pa init` | 交互式输入用户名和 API Token，保存到 `~/.pa-cli/config.json` | ✅ |
+| 上传文件 | `pa files upload <本地路径> <远程路径> [-r]` | 单文件上传，`-r` 递归上传目录 | ✅ |
+| 创建 Console | `pa console create [--executable <路径>]` | 默认创建 Bash Console，可通过 `--executable` 指定 | ✅ |
+| 发送命令 | `pa console send <id> <命令>` | 向 Console 发送输入 | ✅ |
+| 获取输出 | `pa console output <id>` | 读取 Console 输出 | ✅ |
+| 销毁 Console | `pa console kill <id>` | 终止 Console | ✅ |
+| 创建 Webapp | `pa webapp create <域名> --python <版本>` | 创建 Web 应用 | ✅ |
+| 配置 Webapp | `pa webapp config <域名> --source-dir <路径> [--virtualenv <路径>]` | 设置源码目录（必需）和虚拟环境路径（可选） | ✅ |
+| 添加静态映射 | `pa webapp static <域名> --url --path` | 添加 URL 到目录的映射 | ✅ |
+| 重载 Webapp | `pa webapp reload <域名>` | 重新加载应用 | ✅ |
+| 一键部署 | `pa deploy <本地目录> [--domain <域名>]` | 自动完成上传+环境配置+Webapp创建+重载。域名默认 `{username}.pythonanywhere.com` | ✅ |
 
 ### 2.2 不包含（后续迭代）
 
