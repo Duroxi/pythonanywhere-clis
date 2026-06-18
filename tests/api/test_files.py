@@ -138,3 +138,61 @@ def test_delete_raises_on_http_error():
     with patch.object(client.session, "delete", return_value=mock_response):
         with pytest.raises(NotFoundError, match="Not found"):
             client.delete(username="testuser", remote_path="/home/testuser/missing.txt")
+
+
+def test_share_file():
+    """share returns share URL."""
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.return_value = {"url": "/user/testuser/shares/abc123/"}
+
+    with patch.object(client, "_request", return_value=mock_response) as mock_req:
+        result = client.share("testuser", "/home/testuser/test.txt")
+
+    assert result == "/user/testuser/shares/abc123/"
+    mock_req.assert_called_once_with(
+        "POST",
+        "/api/v0/user/{username}/files/sharing/",
+        username="testuser",
+        json={"path": "/home/testuser/test.txt"},
+    )
+
+
+def test_unshare_file():
+    """unshare sends DELETE request."""
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 204
+    mock_response.raise_for_status = MagicMock()
+
+    with patch.object(client, "_request", return_value=mock_response) as mock_req:
+        client.unshare("testuser", "/home/testuser/test.txt")
+
+    mock_req.assert_called_once_with(
+        "DELETE",
+        "/api/v0/user/{username}/files/sharing/",
+        username="testuser",
+        params={"path": "/home/testuser/test.txt"},
+    )
+
+
+def test_get_share_status():
+    """get_share_status returns share URL."""
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.return_value = {"url": "/user/testuser/shares/abc123/"}
+
+    with patch.object(client, "_request", return_value=mock_response) as mock_req:
+        result = client.get_share_status("testuser", "/home/testuser/test.txt")
+
+    assert result == "/user/testuser/shares/abc123/"
+    mock_req.assert_called_once_with(
+        "GET",
+        "/api/v0/user/{username}/files/sharing/",
+        username="testuser",
+        params={"path": "/home/testuser/test.txt"},
+    )

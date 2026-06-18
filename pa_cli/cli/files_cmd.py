@@ -233,3 +233,46 @@ def rm(
     except APIError as e:
         typer.echo(f"API 错误: {e}", err=True)
         raise typer.Exit(code=1)
+
+
+@app.command()
+def share(
+    remote_path: str = typer.Argument(..., help="Remote path to share"),
+):
+    """Share a file and get a share link."""
+    try:
+        account, client = get_client(FilesClient)
+        resolved = _resolve_path(remote_path, account["username"])
+        share_url = client.share(account["username"], resolved)
+        full_url = f"https://www.pythonanywhere.com{share_url}"
+        typer.echo(f"Share link: {full_url}")
+    except NotFoundError as e:
+        typer.echo(f"文件不存在: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except APIError as e:
+        typer.echo(f"API 错误: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def unshare(
+    remote_path: str = typer.Argument(..., help="Remote path to unshare"),
+):
+    """Stop sharing a file."""
+    try:
+        account, client = get_client(FilesClient)
+        resolved = _resolve_path(remote_path, account["username"])
+        client.unshare(account["username"], resolved)
+        typer.echo(f"Stopped sharing: {remote_path}")
+    except NotFoundError as e:
+        typer.echo(f"文件不存在或未分享: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except APIError as e:
+        typer.echo(f"API 错误: {e}", err=True)
+        raise typer.Exit(code=1)

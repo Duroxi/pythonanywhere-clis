@@ -47,6 +47,8 @@ pa deploy ./my-site
 | `pa files rm <path> -r` | Delete directory recursively | Token |
 | `pa files upload <local> <remote>` | Upload a single file | Token |
 | `pa files upload <local> <remote> -r` | Upload directory recursively | Token |
+| `pa files share <path>` | Share a file and get link | Token |
+| `pa files unshare <path>` | Stop sharing a file | Token |
 
 ### Console Management
 
@@ -222,8 +224,6 @@ pytest tests/test_account_crawler.py
 
 - [ ] Scheduled tasks (`pa tasks`)
 - [ ] Always-on tasks (`pa always-on`)
-- [ ] Disk usage query (`pa status disk`)
-- [ ] System configuration (`pa config`)
 - [ ] Database info (`pa databases`)
 - [ ] File sharing (`pa files share`)
 - [ ] SSL management (`pa webapp ssl`)

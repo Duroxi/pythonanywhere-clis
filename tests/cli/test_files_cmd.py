@@ -216,3 +216,68 @@ def test_rm_directory_recursive():
     assert "Deleted olddir" in result.output
     assert "recursive" in result.output
     mock_client.delete.assert_called_once()
+
+
+# --- share command tests ---
+
+
+def test_share_file():
+    """share command generates share link."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.share.return_value = "/user/testuser/shares/abc123/"
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["share", "test.txt"])
+
+    assert result.exit_code == 0
+    assert "Share link" in result.output
+    assert "abc123" in result.output
+    mock_client.share.assert_called_once_with("testuser", "/home/testuser/test.txt/")
+
+
+def test_share_file_not_found():
+    """share command shows error when file not found."""
+    from pa_cli.exceptions import NotFoundError
+
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.share.side_effect = NotFoundError("File not found")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["share", "missing.txt"])
+
+    assert result.exit_code == 1
+    assert "文件不存在" in result.output
+
+
+# --- unshare command tests ---
+
+
+def test_unshare_file():
+    """unshare command stops sharing a file."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.unshare.return_value = None
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["unshare", "test.txt"])
+
+    assert result.exit_code == 0
+    assert "Stopped sharing" in result.output
+    mock_client.unshare.assert_called_once_with("testuser", "/home/testuser/test.txt/")
+
+
+def test_unshare_file_not_found():
+    """unshare command shows error when file not found or not shared."""
+    from pa_cli.exceptions import NotFoundError
+
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.unshare.side_effect = NotFoundError("File not found")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["unshare", "missing.txt"])
+
+    assert result.exit_code == 1
+    assert "文件不存在或未分享" in result.output

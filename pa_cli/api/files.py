@@ -64,3 +64,32 @@ class FilesClient(BaseClient):
             response.raise_for_status()
         except Exception as e:
             raise APIError(f"Delete failed: {response.status_code} {response.text}") from e
+
+    def share(self, username: str, remote_path: str) -> str:
+        """Share a file and return the share URL."""
+        response = self._request(
+            "POST",
+            "/api/v0/user/{username}/files/sharing/",
+            username=username,
+            json={"path": remote_path},
+        )
+        return response.json()["url"]
+
+    def unshare(self, username: str, remote_path: str) -> None:
+        """Stop sharing a file."""
+        self._request(
+            "DELETE",
+            "/api/v0/user/{username}/files/sharing/",
+            username=username,
+            params={"path": remote_path},
+        )
+
+    def get_share_status(self, username: str, remote_path: str) -> str:
+        """Get share status for a file. Returns share URL or raises NotFoundError."""
+        response = self._request(
+            "GET",
+            "/api/v0/user/{username}/files/sharing/",
+            username=username,
+            params={"path": remote_path},
+        )
+        return response.json()["url"]

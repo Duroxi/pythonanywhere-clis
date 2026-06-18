@@ -174,6 +174,16 @@
 
 ---
 
+## 🟢 P3 - 远期改进
+
+### 19. `pa files share/unshare` 命令
+- **文件**：`pa_cli/api/files.py`、`pa_cli/cli/files_cmd.py`
+- **问题**：无法分享文件
+- **方案**：使用 `/api/v0/user/{username}/files/sharing/` API
+- **状态**：✅
+
+---
+
 ## ❌ 不需要实现的功能
 
 ### 18. `pa batch` - 批量操作
