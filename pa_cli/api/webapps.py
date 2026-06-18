@@ -59,3 +59,13 @@ class WebappsClient(BaseClient):
             username=username,
             domain_name=domain_name,
         )
+
+    def get_ssl_info(self, username: str, domain_name: str) -> dict:
+        """Get SSL certificate information."""
+        response = self._request(
+            "GET",
+            "/api/v0/user/{username}/webapps/{domain_name}/ssl/",
+            username=username,
+            domain_name=domain_name,
+        )
+        return response.json()

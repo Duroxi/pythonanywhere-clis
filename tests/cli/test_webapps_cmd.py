@@ -321,3 +321,35 @@ def test_webapp_logs_file_not_found():
 
     assert result.exit_code == 1
     assert "Log file not found" in result.output
+
+
+# --- ssl command tests ---
+
+
+def test_webapp_ssl():
+    """ssl command shows SSL certificate info."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_ssl_info.return_value = {"cert_type": "pythonanywhere-subdomain"}
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["ssl"])
+
+    assert result.exit_code == 0
+    assert "SSL Certificate Info" in result.output
+    assert "pythonanywhere-subdomain" in result.output
+    mock_client.get_ssl_info.assert_called_once_with("u", "u.pythonanywhere.com")
+
+
+def test_webapp_ssl_with_domain():
+    """ssl command shows SSL info for specified domain."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_ssl_info.return_value = {"cert_type": "lets-encrypt"}
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["ssl", "myapp.pythonanywhere.com"])
+
+    assert result.exit_code == 0
+    assert "lets-encrypt" in result.output
+    mock_client.get_ssl_info.assert_called_once_with("u", "myapp.pythonanywhere.com")

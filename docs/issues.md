@@ -188,6 +188,18 @@
 - **方案**：使用 `/api/v0/user/{username}/schedule/` API
 - **状态**：✅
 
+### 21. `pa always-on` 命令
+- **文件**：`pa_cli/api/always_on.py`、`pa_cli/cli/always_on_cmd.py`
+- **问题**：无法管理 always-on 任务
+- **方案**：使用 `/api/v0/user/{username}/always_on/` API（仅付费账户可用）
+- **状态**：✅
+
+### 22. `pa webapp ssl` 命令
+- **文件**：`pa_cli/api/webapps.py`、`pa_cli/cli/webapps_cmd.py`
+- **问题**：无法查看 SSL 证书信息
+- **方案**：使用 `/api/v0/user/{username}/webapps/{domain}/ssl/` API（仅支持查询）
+- **状态**：✅
+
 ---
 
 ## ❌ 不需要实现的功能

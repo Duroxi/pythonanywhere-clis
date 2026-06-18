@@ -251,3 +251,27 @@ def logs(
     except NotFoundError as e:
         typer.echo(f"资源不存在: {e}", err=True)
         raise typer.Exit(code=1)
+
+
+@app.command()
+def ssl(
+    domain_name: str = typer.Argument(None, help="Domain name (default: {username}.pythonanywhere.com)"),
+):
+    """Show SSL certificate information."""
+    try:
+        account, client = get_client(WebappsClient)
+        if domain_name is None:
+            domain_name = f"{account['username']}.pythonanywhere.com"
+        data = client.get_ssl_info(account["username"], domain_name)
+        cert_type = data.get("cert_type", "N/A")
+        typer.echo(f"SSL Certificate Info for {domain_name}:")
+        typer.echo(f"  Type: {cert_type}")
+    except AuthError as e:
+        typer.echo(f"认证失败: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"网络错误: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"资源不存在: {e}", err=True)
+        raise typer.Exit(code=1)

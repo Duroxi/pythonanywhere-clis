@@ -95,3 +95,20 @@ def test_disable_webapp():
         username="testuser",
         domain_name="testuser.pythonanywhere.com",
     )
+
+
+def test_get_ssl_info():
+    """get_ssl_info returns SSL certificate information."""
+    client = WebappsClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"cert_type": "pythonanywhere-subdomain"}
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        result = client.get_ssl_info("testuser", "testuser.pythonanywhere.com")
+
+    mock_req.assert_called_once_with(
+        "GET",
+        "/api/v0/user/{username}/webapps/{domain_name}/ssl/",
+        username="testuser",
+        domain_name="testuser.pythonanywhere.com",
+    )
+    assert result["cert_type"] == "pythonanywhere-subdomain"

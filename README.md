@@ -77,6 +77,7 @@ pa deploy ./my-site
 | `pa webapp enable <domain>` | Enable a web app | Token |
 | `pa webapp disable <domain>` | Disable a web app | Token |
 | `pa webapp logs <domain>` | Show web app logs | Token |
+| `pa webapp ssl <domain>` | Show SSL certificate info | Token |
 
 ### Deployment
 
@@ -101,6 +102,14 @@ pa deploy ./my-site
 | `pa tasks delete <id>` | Delete a scheduled task | Token |
 | `pa tasks enable <id>` | Enable a scheduled task | Token |
 | `pa tasks disable <id>` | Disable a scheduled task | Token |
+
+### Always-on Tasks
+
+| Command | Description | Auth |
+|---------|-------------|------|
+| `pa always-on list` | List all always-on tasks | Token |
+| `pa always-on create <command>` | Create a new always-on task | Token |
+| `pa always-on delete <id>` | Delete an always-on task | Token |
 
 ## Typical Workflows
 
