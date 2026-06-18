@@ -164,6 +164,16 @@
 
 ---
 
+## 🟢 P3 - 远期改进
+
+### 18. `pa status disk` 命令
+- **文件**：`pa_cli/cli/status_cmd.py`、`pa_cli/crawler/account_crawler.py`
+- **问题**：无法查看磁盘使用情况
+- **方案**：通过爬虫获取 `/user/{username}/quota_information/` 端点
+- **状态**：✅
+
+---
+
 ## ❌ 不需要实现的功能
 
 ### 18. `pa batch` - 批量操作

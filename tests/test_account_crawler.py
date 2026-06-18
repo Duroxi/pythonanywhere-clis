@@ -931,3 +931,36 @@ def test_enable_webapp_raises_when_already_enabled():
     with patch.object(crawler.session, "get", return_value=_mock_get_response(WEBAPPS_PAGE_HTML)):
         with pytest.raises(NotFoundError, match="Enable form not found"):
             crawler.enable_webapp("configuser.pythonanywhere.com")
+
+
+# --- get_disk_usage tests ---
+
+DISK_USAGE_RESPONSE = {
+    "used_bytes": 21045248,
+    "used": "20.1 MB",
+    "quota_bytes": 536870912,
+    "quota": "512.0 MB",
+    "percent": "4%",
+}
+
+
+def test_get_disk_usage():
+    """get_disk_usage returns disk usage information."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_json_response(DISK_USAGE_RESPONSE)) as mock_get:
+        result = crawler.get_disk_usage("configuser")
+
+    assert result == DISK_USAGE_RESPONSE
+    mock_get.assert_called_once_with("https://www.pythonanywhere.com/user/configuser/quota_information/")
+
+
+def test_get_disk_usage_uses_self_username_when_no_param():
+    """get_disk_usage uses self.username when no username parameter given."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_json_response(DISK_USAGE_RESPONSE)) as mock_get:
+        result = crawler.get_disk_usage()
+
+    assert result == DISK_USAGE_RESPONSE
+    assert "configuser" in mock_get.call_args[0][0]

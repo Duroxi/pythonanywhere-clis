@@ -355,3 +355,16 @@ class AccountCrawler:
             raise NetworkError(f"Disable request failed: {e}") from e
 
         return disable_resp.status_code in (200, 302)
+
+    def get_disk_usage(self, username: str | None = None) -> dict:
+        """Get disk usage information."""
+        resolved = username or self.username
+        quota_url = f"{self.base_url}/user/{resolved}/quota_information/"
+
+        try:
+            resp = self.session.get(quota_url)
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            raise NetworkError(f"Failed to fetch disk usage: {e}") from e
+
+        return resp.json()

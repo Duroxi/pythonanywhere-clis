@@ -87,6 +87,7 @@ pa deploy ./my-site
 | Command | Description | Auth |
 |---------|-------------|------|
 | `pa status cpu` | Show CPU usage | Token |
+| `pa status disk` | Show disk usage | Password |
 
 ## Typical Workflows
 
