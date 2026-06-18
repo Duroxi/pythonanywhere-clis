@@ -176,10 +176,16 @@
 
 ## 🟢 P3 - 远期改进
 
-### 19. `pa files share/unshare` 命令
+### 19. `pa files share/unshare/share-status` 命令
 - **文件**：`pa_cli/api/files.py`、`pa_cli/cli/files_cmd.py`
 - **问题**：无法分享文件
 - **方案**：使用 `/api/v0/user/{username}/files/sharing/` API
+- **状态**：✅
+
+### 20. `pa tasks` 命令
+- **文件**：`pa_cli/api/tasks.py`、`pa_cli/cli/tasks_cmd.py`
+- **问题**：无法管理定时任务
+- **方案**：使用 `/api/v0/user/{username}/schedule/` API
 - **状态**：✅
 
 ---

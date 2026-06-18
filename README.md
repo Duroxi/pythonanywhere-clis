@@ -92,6 +92,16 @@ pa deploy ./my-site
 | `pa status cpu` | Show CPU usage | Token |
 | `pa status disk` | Show disk usage | Password |
 
+### Scheduled Tasks
+
+| Command | Description | Auth |
+|---------|-------------|------|
+| `pa tasks list` | List all scheduled tasks | Token |
+| `pa tasks create <command>` | Create a new scheduled task | Token |
+| `pa tasks delete <id>` | Delete a scheduled task | Token |
+| `pa tasks enable <id>` | Enable a scheduled task | Token |
+| `pa tasks disable <id>` | Disable a scheduled task | Token |
+
 ## Typical Workflows
 
 ### Deploy a new project
