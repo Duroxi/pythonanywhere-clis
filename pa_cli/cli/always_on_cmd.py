@@ -20,13 +20,13 @@ def list_tasks():
             status = "enabled" if task.get("enabled") else "disabled"
             typer.echo(f"ID: {task['id']}, Command: {task['command']}, Status: {status}")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -43,13 +43,13 @@ def create(
         if "limit" in str(e).lower():
             typer.echo("Error: Always-on task limit reached. Upgrade your plan to add more.", err=True)
         else:
-            typer.echo(f"API 错误: {e}", err=True)
+            typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -69,14 +69,14 @@ def delete(
         client.delete(account["username"], task_id)
         typer.echo(f"Always-on task {task_id} deleted.")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"任务不存在: {e}", err=True)
+        typer.echo(f"Task not found: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)

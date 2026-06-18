@@ -42,10 +42,10 @@ def activate(
         crawler.activate(account["username"], console_id)
         typer.echo(f"Console {console_id} activated successfully.")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -133,10 +133,10 @@ def get_or_create(
         console_id = crawler.get_or_create(account["username"], executable=executable)
         typer.echo(f"Console ready: {console_id}")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
 
 

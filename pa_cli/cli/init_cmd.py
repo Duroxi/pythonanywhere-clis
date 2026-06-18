@@ -26,12 +26,12 @@ def init():
         typer.echo(f"Account '{username}' configured successfully.")
         typer.echo("API token fetched and saved.")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         typer.echo("Don't have an account? Register with: pa register", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)

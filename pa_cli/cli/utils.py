@@ -1,3 +1,4 @@
+import re
 from typing import Type, TypeVar, Tuple
 
 from pa_cli.config import Config
@@ -11,3 +12,16 @@ def get_client(client_class: Type[T]) -> Tuple[dict, T]:
     account = Config.load(verbose=True)
     client = client_class(token=account["token"], host=account["host"])
     return account, client
+
+
+def fix_remote_path(path: str) -> str:
+    """Fix paths mangled by Git Bash (MSYS2) path conversion.
+
+    Git Bash converts /home/user/dir to D:/Git/home/user/dir.
+    This function detects and reverses the conversion.
+    """
+    if re.match(r"^[A-Za-z]:/", path):
+        match = re.search(r"(/home/\S+)", path)
+        if match:
+            return match.group(1)
+    return path

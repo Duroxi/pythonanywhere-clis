@@ -175,22 +175,30 @@ pa_cli/
 │   ├── client.py  # BaseClient with Token auth
 │   ├── consoles.py
 │   ├── files.py
-│   └── webapps.py
+│   ├── webapps.py
+│   ├── system.py
+│   ├── tasks.py
+│   └── always_on.py
 ├── cli/           # CLI commands (Typer)
 │   ├── main.py
+│   ├── utils.py   # Shared utilities (get_client, _fix_remote_path)
 │   ├── init_cmd.py
 │   ├── register_cmd.py
 │   ├── account_cmd.py
 │   ├── files_cmd.py
 │   ├── consoles_cmd.py
 │   ├── webapps_cmd.py
-│   └── deploy_cmd.py
+│   ├── deploy_cmd.py
+│   ├── status_cmd.py
+│   ├── tasks_cmd.py
+│   └── always_on_cmd.py
 ├── crawler/       # Browser simulation (Session auth)
 │   ├── account_crawler.py
 │   └── console_crawler.py
 ├── workflows/     # Deployment orchestration
 │   └── deploy.py
-└── config.py      # Configuration management
+├── config.py      # Configuration management
+└── exceptions.py  # Exception hierarchy
 ```
 
 ## Dependencies
@@ -213,7 +221,7 @@ pytest -v
 pytest tests/test_account_crawler.py
 ```
 
-**Test coverage:** 206 tests passing
+**Test coverage:** 267+ tests passing
 
 ## Roadmap
 
@@ -232,21 +240,22 @@ pytest tests/test_account_crawler.py
 - [x] One-click deployment (`pa deploy`)
 - [x] Hit statistics (`pa webapp hits`)
 - [x] Multi-account management (`pa account switch`)
-- [x] CPU usage query (`pa status`)
+- [x] CPU usage query (`pa status cpu`)
+- [x] Disk usage query (`pa status disk`)
 
 ### ✅ Completed (P2)
 
 - [x] Log management (`pa webapp logs`)
 - [x] Webapp enable/disable (`pa webapp enable/disable`)
 - [x] Delete webapp (`pa webapp delete`)
+- [x] File sharing (`pa files share/unshare/share-status`)
+- [x] SSL info (`pa webapp ssl`)
+- [x] Scheduled tasks (`pa tasks`)
+- [x] Always-on tasks (`pa always-on`)
 
 ### 🔲 Planned (P3)
 
-- [ ] Scheduled tasks (`pa tasks`)
-- [ ] Always-on tasks (`pa always-on`)
-- [ ] Database info (`pa databases`)
-- [ ] File sharing (`pa files share`)
-- [ ] SSL management (`pa webapp ssl`)
+- [ ] Database info (`pa databases`) - API only supports listing, not create/delete
 
 ## License
 

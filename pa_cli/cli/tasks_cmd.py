@@ -21,13 +21,13 @@ def list_tasks():
             typer.echo(f"ID: {task['id']}, Command: {task['command']}, "
                        f"Interval: {task['interval']}, Status: {status}")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -52,13 +52,13 @@ def create(
         )
         typer.echo(f"Task created: ID={task['id']}, Command={task['command']}")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -78,16 +78,16 @@ def delete(
         client.delete(account["username"], task_id)
         typer.echo(f"Task {task_id} deleted.")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"任务不存在: {e}", err=True)
+        typer.echo(f"Task not found: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -101,16 +101,16 @@ def enable(
         client.update(account["username"], task_id, enabled=True)
         typer.echo(f"Task {task_id} enabled.")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"任务不存在: {e}", err=True)
+        typer.echo(f"Task not found: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -124,14 +124,14 @@ def disable(
         client.update(account["username"], task_id, enabled=False)
         typer.echo(f"Task {task_id} disabled.")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"任务不存在: {e}", err=True)
+        typer.echo(f"Task not found: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)

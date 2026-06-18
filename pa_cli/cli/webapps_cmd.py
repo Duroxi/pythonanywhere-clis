@@ -1,28 +1,13 @@
-import re
-
 import typer
 
 from pa_cli.api.files import FilesClient
 from pa_cli.api.webapps import WebappsClient
-from pa_cli.cli.utils import get_client
+from pa_cli.cli.utils import get_client, fix_remote_path
 from pa_cli.config import Config
 from pa_cli.crawler.account_crawler import AccountCrawler
 from pa_cli.exceptions import AuthError, NetworkError, NotFoundError, APIError
 
 app = typer.Typer(help="Manage web apps on PythonAnywhere.")
-
-
-def _fix_remote_path(path: str) -> str:
-    """Fix paths mangled by Git Bash (MSYS2) path conversion.
-
-    Git Bash converts /home/user/dir to D:/Git/home/user/dir.
-    This function detects and reverses the conversion.
-    """
-    if re.match(r"^[A-Za-z]:/", path):
-        match = re.search(r"(/home/\S+)", path)
-        if match:
-            return match.group(1)
-    return path
 
 
 @app.command()
@@ -50,13 +35,13 @@ def config(
         domain_name = f"{account['username']}.pythonanywhere.com"
     kwargs = {}
     if source_dir:
-        kwargs["source_directory"] = _fix_remote_path(source_dir)
+        kwargs["source_directory"] = fix_remote_path(source_dir)
     if virtualenv:
-        kwargs["virtualenv_path"] = _fix_remote_path(virtualenv)
+        kwargs["virtualenv_path"] = fix_remote_path(virtualenv)
     if python_version:
         kwargs["python_version"] = python_version
     if working_dir:
-        kwargs["working_directory"] = _fix_remote_path(working_dir)
+        kwargs["working_directory"] = fix_remote_path(working_dir)
     if not kwargs:
         typer.echo("Error: No configuration specified. Use --source-dir, --virtualenv, --python-version, or --working-dir.", err=True)
         raise typer.Exit(code=1)
@@ -72,7 +57,7 @@ def static(
 ):
     """Add a static file mapping."""
     account, client = get_client(WebappsClient)
-    fixed_path = _fix_remote_path(path)
+    fixed_path = fix_remote_path(path)
     client.add_static_file(account["username"], domain_name, url=url, path=fixed_path)
     typer.echo(f"Static mapping added: {url} -> {fixed_path}")
 
@@ -103,13 +88,13 @@ def hits(
         for key, value in data.items():
             typer.echo(f"  {key}: {value}")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -130,13 +115,13 @@ def reload_crawler(
             typer.echo(f"Failed to reload webapp {domain_name}.", err=True)
             raise typer.Exit(code=1)
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -156,13 +141,13 @@ def delete(
         client.delete(account["username"], domain_name)
         typer.echo(f"Webapp {domain_name} deleted.")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -181,13 +166,13 @@ def enable(
             typer.echo(f"Failed to enable webapp {domain_name}.", err=True)
             raise typer.Exit(code=1)
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -206,13 +191,13 @@ def disable(
             typer.echo(f"Failed to disable webapp {domain_name}.", err=True)
             raise typer.Exit(code=1)
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -243,13 +228,13 @@ def logs(
             typer.echo(f"Log file not found: {log_file}", err=True)
             raise typer.Exit(code=1)
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -267,11 +252,11 @@ def ssl(
         typer.echo(f"SSL Certificate Info for {domain_name}:")
         typer.echo(f"  Type: {cert_type}")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)

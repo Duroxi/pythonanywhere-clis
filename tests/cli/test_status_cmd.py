@@ -36,7 +36,7 @@ def test_status_cpu_network_error():
         result = runner.invoke(app, ["cpu"])
 
     assert result.exit_code == 1
-    assert "网络错误" in result.output
+    assert "Network error" in result.output
 
 
 def test_status_disk():
@@ -76,4 +76,4 @@ def test_status_disk_network_error():
         result = runner.invoke(app, ["disk"])
 
     assert result.exit_code == 1
-    assert "网络错误" in result.output
+    assert "Network error" in result.output

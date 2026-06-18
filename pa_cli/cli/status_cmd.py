@@ -23,13 +23,13 @@ def cpu():
         typer.echo(f"  Limit: {limit} seconds")
         typer.echo(f"  Reset: {reset}")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -49,11 +49,11 @@ def disk():
         typer.echo(f"  Total: {quota}")
         typer.echo(f"  Usage: {percent}")
     except AuthError as e:
-        typer.echo(f"认证失败: {e}", err=True)
+        typer.echo(f"Auth error: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except NotFoundError as e:
-        typer.echo(f"资源不存在: {e}", err=True)
+        typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)

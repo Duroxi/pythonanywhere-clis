@@ -1,26 +1,12 @@
-import re
 from pathlib import Path
 
 import typer
 
 from pa_cli.api.files import FilesClient
-from pa_cli.cli.utils import get_client
+from pa_cli.cli.utils import get_client, fix_remote_path
 from pa_cli.exceptions import APIError, NetworkError, NotFoundError
 
 app = typer.Typer(help="Manage files on PythonAnywhere.")
-
-
-def _fix_remote_path(path: str) -> str:
-    """Fix paths mangled by Git Bash (MSYS2) path conversion.
-
-    Git Bash converts /home/user/dir to D:/Git/home/user/dir.
-    This function detects and reverses the conversion.
-    """
-    if re.match(r"^[A-Za-z]:/", path):
-        match = re.search(r"(/home/\S+)", path)
-        if match:
-            return match.group(1)
-    return path
 
 
 @app.callback()
@@ -33,7 +19,7 @@ def _resolve_path(path: str | None, username: str) -> str:
     """Resolve remote path. Relative paths are under /home/{username}/."""
     if not path:
         return f"/home/{username}/"
-    path = _fix_remote_path(path)
+    path = fix_remote_path(path)
     if path.startswith("/"):
         return path if path.endswith("/") else path + "/"
     return f"/home/{username}/{path}".rstrip("/") + "/"
@@ -61,13 +47,13 @@ def ls(
             else:
                 typer.echo(f"  {name}")
     except NotFoundError as e:
-        typer.echo(f"路径不存在: {e}", err=True)
+        typer.echo(f"Path not found: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -109,13 +95,13 @@ def download(
             target.write_bytes(content)
             typer.echo(f"Downloaded {remote_path} -> {target}")
     except NotFoundError as e:
-        typer.echo(f"文件不存在: {e}", err=True)
+        typer.echo(f"File not found: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -173,13 +159,13 @@ def upload(
                     count += 1
             typer.echo(f"Uploaded {count} files to {remote_path}")
     except NotFoundError as e:
-        typer.echo(f"路径不存在: {e}", err=True)
+        typer.echo(f"Path not found: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -225,13 +211,13 @@ def rm(
         else:
             typer.echo(f"Deleted {path}")
     except NotFoundError as e:
-        typer.echo(f"文件不存在: {e}", err=True)
+        typer.echo(f"File not found: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -247,13 +233,13 @@ def share(
         full_url = f"https://www.pythonanywhere.com{share_url}"
         typer.echo(f"Share link: {full_url}")
     except NotFoundError as e:
-        typer.echo(f"文件不存在: {e}", err=True)
+        typer.echo(f"File not found: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -268,13 +254,13 @@ def unshare(
         client.unshare(account["username"], resolved)
         typer.echo(f"Stopped sharing: {remote_path}")
     except NotFoundError as e:
-        typer.echo(f"文件不存在或未分享: {e}", err=True)
+        typer.echo(f"File not found或未分享: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
 
 
@@ -292,8 +278,8 @@ def share_status(
     except NotFoundError:
         typer.echo(f"File is not shared: {remote_path}")
     except NetworkError as e:
-        typer.echo(f"网络错误: {e}", err=True)
+        typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
-        typer.echo(f"API 错误: {e}", err=True)
+        typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
