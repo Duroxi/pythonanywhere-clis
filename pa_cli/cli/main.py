@@ -16,13 +16,16 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
+# Direct commands (single command)
 app.add_typer(init_app, name="init", help="Configure PythonAnywhere account")
+app.add_typer(deploy_app, name="deploy", help="Deploy a local project to PythonAnywhere")
+app.add_typer(register_app, name="register", help="Register a new PythonAnywhere account")
+
+# Command groups (multiple subcommands)
 app.add_typer(files_app, name="files", help="Manage files on PythonAnywhere")
 app.add_typer(consoles_app, name="console", help="Manage consoles on PythonAnywhere")
 app.add_typer(webapps_app, name="webapp", help="Manage web apps on PythonAnywhere")
-app.add_typer(deploy_app, name="deploy", help="Deploy a local project to PythonAnywhere")
 app.add_typer(account_app, name="account", help="Account management")
-app.add_typer(register_app, name="register", help="Register a new PythonAnywhere account")
 app.add_typer(status_app, name="status", help="Query system status and resource usage")
 app.add_typer(tasks_app, name="tasks", help="Manage scheduled tasks on PythonAnywhere")
 app.add_typer(always_on_app, name="always-on", help="Manage always-on tasks on PythonAnywhere")
