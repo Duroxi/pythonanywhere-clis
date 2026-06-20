@@ -105,7 +105,7 @@ def test_init_uses_custom_host(tmp_path):
         mock_crawler.login.return_value = True
         mock_crawler.get_token.return_value = "token"
 
-        result = runner.invoke(app, input="testuser\nsecret123\neu.pythonanywhere.com\n")
+        result = runner.invoke(app, ["-u", "testuser", "-p", "secret123", "-h", "eu.pythonanywhere.com"])
 
     assert result.exit_code == 0
     mock_save.assert_any_call(username="testuser", password="secret123", host="eu.pythonanywhere.com")

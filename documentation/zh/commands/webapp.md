@@ -308,6 +308,212 @@ Login failed. Check your credentials.
 
 ---
 
+## pa webapp delete
+
+删除一个 Web 应用。
+
+### 语法
+
+```bash
+pa webapp delete <domain_name> [-f | --force]
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `domain_name` | 是 | 域名 |
+
+### 选项
+
+| 选项 | 说明 |
+|------|------|
+| `-f`, `--force` | 跳过确认提示 |
+
+### 示例
+
+```bash
+$ pa webapp delete myuser.pythonanywhere.com
+Are you sure you want to delete myuser.pythonanywhere.com? [y/N]: y
+Webapp myuser.pythonanywhere.com deleted.
+```
+
+### 前置条件
+
+- 需先运行 `pa init` 完成账户配置
+
+---
+
+## pa webapp enable
+
+启用一个 Web 应用。
+
+### 语法
+
+```bash
+pa webapp enable <domain_name>
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `domain_name` | 是 | 域名 |
+
+### 说明
+
+通过爬虫模拟浏览器启用 Web 应用。此命令需要存储密码（Session 认证）。
+
+### 示例
+
+```bash
+$ pa webapp enable myuser.pythonanywhere.com
+Webapp myuser.pythonanywhere.com enabled.
+```
+
+### 前置条件
+
+- 需先运行 `pa init` 完成账户配置
+- 需先运行 `pa account login` 存储密码
+
+---
+
+## pa webapp disable
+
+禁用一个 Web 应用。
+
+### 语法
+
+```bash
+pa webapp disable <domain_name>
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `domain_name` | 是 | 域名 |
+
+### 说明
+
+通过爬虫模拟浏览器禁用 Web 应用。此命令需要存储密码（Session 认证）。
+
+### 示例
+
+```bash
+$ pa webapp disable myuser.pythonanywhere.com
+Webapp myuser.pythonanywhere.com disabled.
+```
+
+### 前置条件
+
+- 需先运行 `pa init` 完成账户配置
+- 需先运行 `pa account login` 存储密码
+
+---
+
+## pa webapp logs
+
+查看 Web 应用的日志。
+
+### 语法
+
+```bash
+pa webapp logs [<domain_name>] [-t <log_type>] [-n <lines>]
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `domain_name` | 否 | 域名（默认：`{username}.pythonanywhere.com`） |
+
+### 选项
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `-t`, `--type` | `error` | 日志类型：access, error, server |
+| `-n`, `--lines` | `50` | 显示行数 |
+
+### 示例
+
+**查看 error 日志（默认）：**
+
+```bash
+$ pa webapp logs
+2026-06-20 10:15:30,123: Exception on /api/data [GET]
+Traceback (most recent call last):
+  File "/home/user/app.py", line 42, in get_data
+    raise ValueError("Invalid input")
+ValueError: Invalid input
+```
+
+**查看 access 日志：**
+
+```bash
+$ pa webapp logs --type access --lines 5
+47.79.194.217 - - [20/Jun/2026:10:15:30 +0000] "GET / HTTP/1.1" 200 752
+```
+
+**查看 server 日志：**
+
+```bash
+$ pa webapp logs --type server
+2026-06-20 10:00:00 *** Starting uWSGI 2.0.20 ***
+```
+
+### 日志类型
+
+| 类型 | 说明 |
+|------|------|
+| `access` | HTTP 访问日志 |
+| `error` | 错误日志（默认） |
+| `server` | 服务器日志 |
+
+### 前置条件
+
+- 需先运行 `pa init` 完成账户配置
+
+---
+
+## pa webapp ssl
+
+查看 Web 应用的 SSL 证书信息。
+
+### 语法
+
+```bash
+pa webapp ssl [<domain_name>]
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `domain_name` | 否 | 域名（默认：`{username}.pythonanywhere.com`） |
+
+### 示例
+
+```bash
+$ pa webapp ssl
+SSL Certificate Info for myuser.pythonanywhere.com:
+  Type: pythonanywhere-subdomain
+```
+
+### 证书类型
+
+| 类型 | 说明 |
+|------|------|
+| `pythonanywhere-subdomain` | PythonAnywhere 子域名证书（免费） |
+| `lets-encrypt` | Let's Encrypt 证书（付费） |
+| `custom` | 自定义证书（付费） |
+
+### 前置条件
+
+- 需先运行 `pa init` 完成账户配置
+
+---
+
 ## 典型工作流
 
 ### 完整部署一个 Web 应用
@@ -335,10 +541,26 @@ pa webapp reload myuser.pythonanywhere.com
 # 检查访问量
 pa webapp hits myuser.pythonanywhere.com
 
+# 查看错误日志
+pa webapp logs --type error --lines 20
+
+# 查看 SSL 证书
+pa webapp ssl
+
 # 更新代码后重载
 pa files upload ./app.py /home/myuser/myproject/app.py
 pa webapp reload myuser.pythonanywhere.com
 
 # API 重载失败时使用爬虫方式
 pa webapp reload-crawler myuser.pythonanywhere.com
+```
+
+### 禁用/启用应用
+
+```bash
+# 临时禁用应用
+pa webapp disable myuser.pythonanywhere.com
+
+# 重新启用应用
+pa webapp enable myuser.pythonanywhere.com
 ```

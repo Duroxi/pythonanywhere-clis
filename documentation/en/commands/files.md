@@ -99,4 +99,228 @@ Error: Upload failed: 500 Internal Server Error
 
 - Upload operations will overwrite remote files with the same name
 - Directory upload preserves the local directory structure; the last directory name of `local_path` becomes the remote directory name
-- No progress display for large file uploads; the total file count is shown upon completion
+- Progress bar is displayed for large file uploads
+
+---
+
+## pa files ls
+
+List remote directory contents.
+
+### Syntax
+
+```bash
+pa files ls [<remote_path>]
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `remote_path` | No | Remote path (default: user home directory) |
+
+### Example
+
+```bash
+$ pa files ls
+  .bashrc
+  .profile
+  myproject/
+  README.txt
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+
+---
+
+## pa files download
+
+Download files or directories to local.
+
+### Syntax
+
+```bash
+pa files download <remote_path> [<local_path>] [-r | --recursive]
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `remote_path` | Yes | Remote file or directory path |
+| `local_path` | No | Local destination path (default: current directory) |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-r`, `--recursive` | Recursively download directory |
+
+### Example
+
+```bash
+$ pa files download /home/myuser/app.py ./app.py
+Downloaded /home/myuser/app.py -> app.py
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+
+---
+
+## pa files rm
+
+Delete remote files or directories.
+
+### Syntax
+
+```bash
+pa files rm <remote_path> [-r | --recursive] [-f | --force]
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `remote_path` | Yes | Remote file or directory path |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-r`, `--recursive` | Recursively delete directory |
+| `-f`, `--force` | Skip confirmation |
+
+### Example
+
+```bash
+$ pa files rm /home/myuser/old.txt
+Are you sure you want to delete '/home/myuser/old.txt'? [y/N]: y
+Deleted /home/myuser/old.txt
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+
+---
+
+## pa files share
+
+Share a file and get share link.
+
+### Syntax
+
+```bash
+pa files share <remote_path>
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `remote_path` | Yes | Remote file path |
+
+### Example
+
+```bash
+$ pa files share /home/myuser/data.csv
+Share link: https://www.pythonanywhere.com/user/myuser/shares/abc123/
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+
+---
+
+## pa files unshare
+
+Stop sharing a file.
+
+### Syntax
+
+```bash
+pa files unshare <remote_path>
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `remote_path` | Yes | Remote file path |
+
+### Example
+
+```bash
+$ pa files unshare /home/myuser/data.csv
+Stopped sharing: /home/myuser/data.csv
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+
+---
+
+## pa files share-status
+
+Check if a file is shared.
+
+### Syntax
+
+```bash
+pa files share-status <remote_path>
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `remote_path` | Yes | Remote file path |
+
+### Example
+
+```bash
+$ pa files share-status /home/myuser/data.csv
+File is shared: https://www.pythonanywhere.com/user/myuser/shares/abc123/
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+
+---
+
+## Typical Workflows
+
+### File Sharing
+
+```bash
+# 1. Share a file
+$ pa files share /home/myuser/report.pdf
+Share link: https://www.pythonanywhere.com/user/myuser/shares/abc123/
+
+# 2. Check share status
+$ pa files share-status /home/myuser/report.pdf
+File is shared: https://www.pythonanywhere.com/user/myuser/shares/abc123/
+
+# 3. Stop sharing
+$ pa files unshare /home/myuser/report.pdf
+Stopped sharing: /home/myuser/report.pdf
+```
+
+### File Backup
+
+```bash
+# 1. Download entire project
+$ pa files download /home/myuser/myproject ./backup/myproject -r
+Downloaded 50 files to backup/myproject
+
+# 2. Download single file
+$ pa files download /home/myuser/config.json ./config.json
+Downloaded /home/myuser/config.json -> config.json
+```

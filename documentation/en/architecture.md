@@ -11,24 +11,32 @@ pythonanywhere-cli/
 ├── pa_cli/                    # Main source directory
 │   ├── __init__.py
 │   ├── config.py              # Configuration management (read/write ~/.pa-cli/config.json)
+│   ├── exceptions.py          # Exception hierarchy definitions
 │   │
 │   ├── api/                   # REST API client module (Token authentication)
 │   │   ├── __init__.py
 │   │   ├── client.py          # BaseClient base class, wraps HTTP requests
 │   │   ├── consoles.py        # ConsolesClient - Console API
-│   │   ├── files.py           # FilesClient - File upload API
-│   │   └── webapps.py         # WebappsClient - Web app API
+│   │   ├── files.py           # FilesClient - File API
+│   │   ├── webapps.py         # WebappsClient - Web app API
+│   │   ├── system.py          # SystemClient - System API (CPU)
+│   │   ├── tasks.py           # TasksClient - Scheduled tasks API
+│   │   └── always_on.py       # AlwaysOnClient - Always-on tasks API
 │   │
 │   ├── cli/                   # CLI command layer (Typer framework)
 │   │   ├── __init__.py
 │   │   ├── main.py            # Entry point: registers all subcommands
+│   │   ├── utils.py           # Shared utilities (get_client, fix_remote_path)
 │   │   ├── init_cmd.py        # pa init - Initialize configuration
+│   │   ├── register_cmd.py    # pa register - Register new account
+│   │   ├── account_cmd.py     # pa account - Account management
 │   │   ├── files_cmd.py       # pa files - File operations
 │   │   ├── consoles_cmd.py    # pa console - Console operations
 │   │   ├── webapps_cmd.py     # pa webapp - Web app operations
 │   │   ├── deploy_cmd.py      # pa deploy - Deploy project
-│   │   ├── account_cmd.py     # pa account - Account management
-│   │   └── register_cmd.py    # pa register - Register new account
+│   │   ├── status_cmd.py      # pa status - System status query
+│   │   ├── tasks_cmd.py       # pa tasks - Scheduled tasks management
+│   │   └── always_on_cmd.py   # pa always-on - Always-on tasks management
 │   │
 │   ├── crawler/               # Browser simulation module (Session authentication)
 │   │   ├── __init__.py
@@ -40,10 +48,12 @@ pythonanywhere-cli/
 │       └── deploy.py          # Deploy workflow (upload -> environment -> config -> reload)
 │
 ├── tests/                     # Test directory
-├── docs/                      # Supplementary documentation
-├── documentation/             # Detailed documentation (this document's location)
+├── docs/                      # Development documentation
+├── documentation/             # User documentation (this document's location)
 ├── pyproject.toml             # Project metadata and dependencies
-└── README.md                  # Project overview
+├── README.md                  # Project overview
+├── CHANGELOG.md               # Version change log
+└── LICENSE                    # MIT License
 ```
 
 ### Module Responsibilities

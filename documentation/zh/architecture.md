@@ -11,24 +11,32 @@ pythonanywhere-cli/
 ├── pa_cli/                    # 主源码目录
 │   ├── __init__.py
 │   ├── config.py              # 配置管理（读写 ~/.pa-cli/config.json）
+│   ├── exceptions.py          # 异常层级定义
 │   │
 │   ├── api/                   # REST API 客户端模块（Token 认证）
 │   │   ├── __init__.py
 │   │   ├── client.py          # BaseClient 基类，封装 HTTP 请求
 │   │   ├── consoles.py        # ConsolesClient - 控制台 API
-│   │   ├── files.py           # FilesClient - 文件上传 API
-│   │   └── webapps.py         # WebappsClient - Web 应用 API
+│   │   ├── files.py           # FilesClient - 文件 API
+│   │   ├── webapps.py         # WebappsClient - Web 应用 API
+│   │   ├── system.py          # SystemClient - 系统 API（CPU）
+│   │   ├── tasks.py           # TasksClient - 定时任务 API
+│   │   └── always_on.py       # AlwaysOnClient - Always-on 任务 API
 │   │
 │   ├── cli/                   # CLI 命令层（Typer 框架）
 │   │   ├── __init__.py
 │   │   ├── main.py            # 入口：注册所有子命令
+│   │   ├── utils.py           # 公共工具函数（get_client, fix_remote_path）
 │   │   ├── init_cmd.py        # pa init - 初始化配置
+│   │   ├── register_cmd.py    # pa register - 注册新账户
+│   │   ├── account_cmd.py     # pa account - 账户管理
 │   │   ├── files_cmd.py       # pa files - 文件操作
 │   │   ├── consoles_cmd.py    # pa console - 控制台操作
 │   │   ├── webapps_cmd.py     # pa webapp - Web 应用操作
 │   │   ├── deploy_cmd.py      # pa deploy - 部署项目
-│   │   ├── account_cmd.py     # pa account - 账户管理
-│   │   └── register_cmd.py    # pa register - 注册新账户
+│   │   ├── status_cmd.py      # pa status - 系统状态查询
+│   │   ├── tasks_cmd.py       # pa tasks - 定时任务管理
+│   │   └── always_on_cmd.py   # pa always-on - Always-on 任务管理
 │   │
 │   ├── crawler/               # 浏览器模拟模块（Session 认证）
 │   │   ├── __init__.py
@@ -40,10 +48,12 @@ pythonanywhere-cli/
 │       └── deploy.py          # 部署工作流（上传 → 环境 → 配置 → 重载）
 │
 ├── tests/                     # 测试目录
-├── docs/                      # 补充文档
-├── documentation/             # 详细文档（本文档所在位置）
+├── docs/                      # 开发文档
+├── documentation/             # 用户文档（本文档所在位置）
 ├── pyproject.toml             # 项目元数据和依赖
-└── README.md                  # 项目说明
+├── README.md                  # 项目说明
+├── CHANGELOG.md               # 版本变更记录
+└── LICENSE                    # MIT 许可证
 ```
 
 ### 模块职责

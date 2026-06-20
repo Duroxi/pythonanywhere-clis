@@ -308,6 +308,184 @@ Login failed. Check your credentials.
 
 ---
 
+## pa webapp delete
+
+Delete a web application.
+
+### Syntax
+
+```bash
+pa webapp delete <domain_name> [-f | --force]
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `domain_name` | Yes | Domain name |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-f`, `--force` | Skip confirmation |
+
+### Example
+
+```bash
+$ pa webapp delete myuser.pythonanywhere.com
+Are you sure you want to delete myuser.pythonanywhere.com? [y/N]: y
+Webapp myuser.pythonanywhere.com deleted.
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+
+---
+
+## pa webapp enable
+
+Enable a web application.
+
+### Syntax
+
+```bash
+pa webapp enable <domain_name>
+```
+
+### Description
+
+Enables a web application via crawler. Requires stored password (Session authentication).
+
+### Example
+
+```bash
+$ pa webapp enable myuser.pythonanywhere.com
+Webapp myuser.pythonanywhere.com enabled.
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+- Must run `pa account login` to store password
+
+---
+
+## pa webapp disable
+
+Disable a web application.
+
+### Syntax
+
+```bash
+pa webapp disable <domain_name>
+```
+
+### Description
+
+Disables a web application via crawler. Requires stored password (Session authentication).
+
+### Example
+
+```bash
+$ pa webapp disable myuser.pythonanywhere.com
+Webapp myuser.pythonanywhere.com disabled.
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+- Must run `pa account login` to store password
+
+---
+
+## pa webapp logs
+
+View web application logs.
+
+### Syntax
+
+```bash
+pa webapp logs [<domain_name>] [-t <log_type>] [-n <lines>]
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `domain_name` | No | Domain name (default: `{username}.pythonanywhere.com`) |
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-t`, `--type` | `error` | Log type: access, error, server |
+| `-n`, `--lines` | `50` | Number of lines to show |
+
+### Example
+
+```bash
+$ pa webapp logs --type error --lines 10
+2026-06-20 10:15:30,123: Exception on /api/data [GET]
+Traceback (most recent call last):
+  File "/home/user/app.py", line 42, in get_data
+    raise ValueError("Invalid input")
+ValueError: Invalid input
+```
+
+### Log Types
+
+| Type | Description |
+|------|-------------|
+| `access` | HTTP access log |
+| `error` | Error log (default) |
+| `server` | Server log |
+
+### Prerequisites
+
+- Must run `pa init` first
+
+---
+
+## pa webapp ssl
+
+View SSL certificate information.
+
+### Syntax
+
+```bash
+pa webapp ssl [<domain_name>]
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `domain_name` | No | Domain name (default: `{username}.pythonanywhere.com`) |
+
+### Example
+
+```bash
+$ pa webapp ssl
+SSL Certificate Info for myuser.pythonanywhere.com:
+  Type: pythonanywhere-subdomain
+```
+
+### Certificate Types
+
+| Type | Description |
+|------|-------------|
+| `pythonanywhere-subdomain` | PythonAnywhere subdomain certificate (free) |
+| `lets-encrypt` | Let's Encrypt certificate (paid) |
+| `custom` | Custom certificate (paid) |
+
+### Prerequisites
+
+- Must run `pa init` first
+
+---
+
 ## Typical Workflows
 
 ### Full Web App Deployment
@@ -335,10 +513,26 @@ pa webapp reload myuser.pythonanywhere.com
 # Check traffic
 pa webapp hits myuser.pythonanywhere.com
 
+# View error logs
+pa webapp logs --type error --lines 20
+
+# Check SSL certificate
+pa webapp ssl
+
 # Reload after code updates
 pa files upload ./app.py /home/myuser/myproject/app.py
 pa webapp reload myuser.pythonanywhere.com
 
 # Use crawler method when API reload fails
 pa webapp reload-crawler myuser.pythonanywhere.com
+```
+
+### Disable/Enable Application
+
+```bash
+# Temporarily disable
+pa webapp disable myuser.pythonanywhere.com
+
+# Re-enable
+pa webapp enable myuser.pythonanywhere.com
 ```
