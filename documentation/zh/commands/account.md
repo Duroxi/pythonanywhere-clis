@@ -6,32 +6,54 @@
 
 ## pa init
 
-交互式配置 PythonAnywhere 账户。自动登录并获取 API Token。
+配置 PythonAnywhere 账户。支持交互式和命令行两种模式。
 
 ### 语法
 
 ```bash
-pa init
+pa init [-u <username>] [-p <password>] [-h <host>]
 ```
+
+### 选项
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `-u`, `--username` | 无（交互式提示） | PythonAnywhere 用户名 |
+| `-p`, `--password` | 无（交互式提示） | 账户密码 |
+| `-h`, `--host` | `www.pythonanywhere.com` | PythonAnywhere 主机地址 |
 
 ### 说明
 
-该命令会依次提示输入以下信息：
-1. PythonAnywhere 用户名
-2. 密码（隐藏输入）
-3. 主机地址（默认 `www.pythonanywhere.com`）
-
 配置完成后，自动通过爬虫登录并获取 API Token，保存到 `~/.pa-cli/config.json`。
 
+如果 Token 不存在，会自动创建一个新 Token。
+
 ### 示例
+
+**交互式模式：**
 
 ```bash
 $ pa init
 PythonAnywhere username: myuser
 Password: ********
-Host [www.pythonanywhere.com]:
 Account 'myuser' configured successfully.
-API token fetched and saved.
+API token: abc123def456
+```
+
+**命令行模式：**
+
+```bash
+$ pa init -u myuser -p mypassword
+Account 'myuser' configured successfully.
+API token: abc123def456
+```
+
+**指定主机：**
+
+```bash
+$ pa init -u myuser -p mypassword -h eu.pythonanywhere.com
+Account 'myuser' configured successfully.
+API token: abc123def456
 ```
 
 ### 错误场景
@@ -39,18 +61,15 @@ API token fetched and saved.
 **用户名或密码错误：**
 
 ```bash
-$ pa init
-PythonAnywhere username: wronguser
-Password: ********
-Host [www.pythonanywhere.com]:
-Login failed. Please check your username and password.
+$ pa init -u wronguser -p wrongpass
+Auth error: Login failed. Please check your username and password.
 Don't have an account? Register with: pa register
 ```
 
 **网络异常：**
 
 ```bash
-Error: Failed to fetch login page: Connection refused
+Network error: Failed to fetch login page: Connection refused
 ```
 
 ### 前置条件
@@ -121,6 +140,127 @@ Error: Failed to fetch registration page: Connection refused
 注册成功后：
 1. 检查邮箱完成验证
 2. 运行 `pa init` 配置账户
+
+---
+
+## pa account list
+
+列出所有已配置的账户。
+
+### 语法
+
+```bash
+pa account list
+```
+
+### 示例
+
+```bash
+$ pa account list
+* myuser    www.pythonanywhere.com    token: abc12345...
+  workuser  www.pythonanywhere.com    token: def67890...
+```
+
+**无账户时：**
+
+```bash
+$ pa account list
+No accounts configured. Run 'pa init' to add one.
+```
+
+### 输出说明
+
+- `*` 标记表示当前默认账户
+- Token 只显示前 8 位，其余用 `...` 替代
+
+### 前置条件
+
+- 无
+
+---
+
+## pa account switch
+
+切换默认账户。
+
+### 语法
+
+```bash
+pa account switch <username>
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `username` | 是 | 要切换到的用户名 |
+
+### 示例
+
+```bash
+$ pa account switch workuser
+Switched to account 'workuser'.
+```
+
+### 错误场景
+
+**账户不存在：**
+
+```bash
+$ pa account switch nonexistent
+Error: Account 'nonexistent' not found in config.
+```
+
+### 前置条件
+
+- 需先运行 `pa init` 添加账户
+
+---
+
+## pa account remove
+
+删除一个已配置的账户。
+
+### 语法
+
+```bash
+pa account remove <username>
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `username` | 是 | 要删除的用户名 |
+
+### 示例
+
+```bash
+$ pa account remove workuser
+Removed account 'workuser'.
+Switched to account 'myuser'.
+```
+
+**删除当前默认账户：**
+
+```bash
+$ pa account remove myuser
+Removed account 'myuser'.
+Switched to account 'workuser'.
+```
+
+### 错误场景
+
+**账户不存在：**
+
+```bash
+$ pa account remove nonexistent
+Error: Account 'nonexistent' not found in config.
+```
+
+### 前置条件
+
+- 需先运行 `pa init` 添加账户
 
 ---
 

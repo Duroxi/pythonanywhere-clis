@@ -6,32 +6,54 @@ Account management commands, including initializing configuration, registering n
 
 ## pa init
 
-Interactively configure a PythonAnywhere account. Automatically logs in and fetches the API Token.
+Configure a PythonAnywhere account. Supports both interactive and command-line modes.
 
 ### Syntax
 
 ```bash
-pa init
+pa init [-u <username>] [-p <password>] [-h <host>]
 ```
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-u`, `--username` | None (interactive prompt) | PythonAnywhere username |
+| `-p`, `--password` | None (interactive prompt) | Account password |
+| `-h`, `--host` | `www.pythonanywhere.com` | PythonAnywhere host address |
 
 ### Description
 
-This command sequentially prompts for the following information:
-1. PythonAnywhere username
-2. Password (hidden input)
-3. Host address (default: `www.pythonanywhere.com`)
+After configuration, automatically logs in via crawler and fetches API Token, saving to `~/.pa-cli/config.json`.
 
-After configuration is complete, it automatically logs in via the crawler and fetches the API Token, saving it to `~/.pa-cli/config.json`.
+If Token doesn't exist, automatically creates a new one.
 
-### Example
+### Examples
+
+**Interactive mode:**
 
 ```bash
 $ pa init
 PythonAnywhere username: myuser
 Password: ********
-Host [www.pythonanywhere.com]:
 Account 'myuser' configured successfully.
-API token fetched and saved.
+API token: abc123def456
+```
+
+**Command-line mode:**
+
+```bash
+$ pa init -u myuser -p mypassword
+Account 'myuser' configured successfully.
+API token: abc123def456
+```
+
+**Custom host:**
+
+```bash
+$ pa init -u myuser -p mypassword -h eu.pythonanywhere.com
+Account 'myuser' configured successfully.
+API token: abc123def456
 ```
 
 ### Error Scenarios
@@ -39,18 +61,15 @@ API token fetched and saved.
 **Incorrect username or password:**
 
 ```bash
-$ pa init
-PythonAnywhere username: wronguser
-Password: ********
-Host [www.pythonanywhere.com]:
-Login failed. Please check your username and password.
+$ pa init -u wronguser -p wrongpass
+Auth error: Login failed. Please check your username and password.
 Don't have an account? Register with: pa register
 ```
 
 **Network error:**
 
 ```bash
-Error: Failed to fetch login page: Connection refused
+Network error: Failed to fetch login page: Connection refused
 ```
 
 ### Prerequisites
@@ -121,6 +140,127 @@ Error: Failed to fetch registration page: Connection refused
 After successful registration:
 1. Check your email to complete verification
 2. Run `pa init` to configure your account
+
+---
+
+## pa account list
+
+List all configured accounts.
+
+### Syntax
+
+```bash
+pa account list
+```
+
+### Example
+
+```bash
+$ pa account list
+* myuser    www.pythonanywhere.com    token: abc12345...
+  workuser  www.pythonanywhere.com    token: def67890...
+```
+
+**No accounts:**
+
+```bash
+$ pa account list
+No accounts configured. Run 'pa init' to add one.
+```
+
+### Output Description
+
+- `*` marks the current default account
+- Token shows only first 8 characters, rest replaced with `...`
+
+### Prerequisites
+
+- None
+
+---
+
+## pa account switch
+
+Switch the default account.
+
+### Syntax
+
+```bash
+pa account switch <username>
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `username` | Yes | Username to switch to |
+
+### Example
+
+```bash
+$ pa account switch workuser
+Switched to account 'workuser'.
+```
+
+### Error Scenarios
+
+**Account not found:**
+
+```bash
+$ pa account switch nonexistent
+Error: Account 'nonexistent' not found in config.
+```
+
+### Prerequisites
+
+- Must run `pa init` first to add accounts
+
+---
+
+## pa account remove
+
+Remove a configured account.
+
+### Syntax
+
+```bash
+pa account remove <username>
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `username` | Yes | Username to remove |
+
+### Example
+
+```bash
+$ pa account remove workuser
+Removed account 'workuser'.
+Switched to account 'myuser'.
+```
+
+**Removing current default account:**
+
+```bash
+$ pa account remove myuser
+Removed account 'myuser'.
+Switched to account 'workuser'.
+```
+
+### Error Scenarios
+
+**Account not found:**
+
+```bash
+$ pa account remove nonexistent
+Error: Account 'nonexistent' not found in config.
+```
+
+### Prerequisites
+
+- Must run `pa init` first to add accounts
 
 ---
 
