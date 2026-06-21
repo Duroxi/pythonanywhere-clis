@@ -196,3 +196,102 @@ def test_get_share_status():
         username="testuser",
         params={"path": "/home/testuser/test.txt"},
     )
+
+
+def test_list_files():
+    """list returns dict of files."""
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.return_value = {
+        "app.py": {"type": "file", "url": "..."},
+        "static": {"type": "directory", "url": "..."},
+    }
+
+    with patch.object(client.session, "get", return_value=mock_response) as mock_get:
+        result = client.list("testuser", "/home/testuser/")
+
+    assert "app.py" in result
+    assert "static" in result
+
+
+def test_download_file():
+    """download returns file content."""
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status = MagicMock()
+    mock_response.content = b"file content"
+
+    with patch.object(client.session, "get", return_value=mock_response) as mock_get:
+        result = client.download("testuser", "/home/testuser/app.py")
+
+    assert result == b"file content"
+
+
+def test_delete_file():
+    """delete sends DELETE request."""
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status = MagicMock()
+
+    with patch.object(client.session, "delete", return_value=mock_response) as mock_delete:
+        client.delete("testuser", "/home/testuser/old.txt")
+
+    mock_delete.assert_called_once()
+
+
+def test_upload_file():
+    """upload sends POST request and returns status code."""
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status = MagicMock()
+
+    with patch.object(client.session, "post", return_value=mock_response) as mock_post:
+        result = client.upload("testuser", "/home/testuser/app.py", b"content")
+
+    assert result == 200
+    mock_post.assert_called_once()
+
+
+def test_list_files_empty():
+    """list returns empty dict for empty directory."""
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.return_value = {}
+
+    with patch.object(client.session, "get", return_value=mock_response) as mock_get:
+        result = client.list("testuser", "/home/testuser/empty/")
+
+    assert result == {}
+
+
+def test_download_file_not_found():
+    """download raises NotFoundError for missing file."""
+    from pa_cli.exceptions import NotFoundError
+
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 404
+
+    with patch.object(client.session, "get", return_value=mock_response):
+        with pytest.raises(NotFoundError):
+            client.download("testuser", "/home/testuser/missing.txt")
+
+
+def test_upload_file_not_found():
+    """upload raises NotFoundError for invalid path."""
+    from pa_cli.exceptions import NotFoundError
+
+    client = FilesClient(token="t", host="www.pythonanywhere.com")
+    mock_response = MagicMock()
+    mock_response.status_code = 404
+
+    with patch.object(client.session, "post", return_value=mock_response):
+        with pytest.raises(NotFoundError):
+            client.upload("testuser", "/invalid/path", b"content")

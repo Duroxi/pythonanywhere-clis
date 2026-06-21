@@ -2,7 +2,7 @@ from unittest.mock import patch, MagicMock
 from typer.testing import CliRunner
 
 from pa_cli.cli.account_cmd import app
-from pa_cli.exceptions import AuthError, NotFoundError
+from pa_cli.exceptions import AuthError, NetworkError, NotFoundError
 
 runner = CliRunner()
 
@@ -268,3 +268,126 @@ def test_remove_command_exits_on_nonexistent_user():
 
     assert result.exit_code == 1
     assert "nobody" in result.output
+
+
+def test_account_list_no_accounts():
+    """account list shows message when no accounts configured."""
+    with patch("pa_cli.cli.account_cmd.Config.list_accounts") as mock_list, \
+         patch("pa_cli.cli.account_cmd.Config.load") as mock_load:
+        mock_list.return_value = []
+        mock_load.side_effect = FileNotFoundError("Config not found")
+
+        result = runner.invoke(app, ["list"])
+
+    assert result.exit_code == 0
+    assert "No accounts configured" in result.output
+
+
+def test_account_switch_not_found():
+    """account switch shows error when account not found."""
+    with patch("pa_cli.cli.account_cmd.Config.set_default") as mock_set:
+        mock_set.side_effect = ValueError("Account 'nonexistent' not found in config.")
+
+        result = runner.invoke(app, ["switch", "nonexistent"])
+
+    assert result.exit_code == 1
+    assert "not found" in result.output.lower()
+
+
+def test_account_remove_not_found():
+    """account remove shows error when account not found."""
+    with patch("pa_cli.cli.account_cmd.Config.remove") as mock_remove:
+        mock_remove.side_effect = ValueError("Account 'nonexistent' not found in config.")
+
+        result = runner.invoke(app, ["remove", "nonexistent"])
+
+    assert result.exit_code == 1
+    assert "not found" in result.output.lower()
+
+
+def test_account_token_revokes():
+    """account token --revoke creates new token."""
+    with patch("pa_cli.cli.account_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as MockCrawler:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h", "password": "p"}
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = True
+        mock_crawler.create_token.return_value = "newtoken"
+
+        result = runner.invoke(app, ["token", "--revoke"])
+
+    assert result.exit_code == 0
+    assert "newtoken" in result.output
+    mock_crawler.create_token.assert_called_once()
+
+
+def test_account_extend_success():
+    """account extend extends expiry successfully."""
+    with patch("pa_cli.cli.account_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as MockCrawler:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h", "password": "p"}
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = True
+        mock_crawler.get_expiry_date.return_value = "2026-12-31"
+        mock_crawler.extend_expiry.return_value = True
+
+        result = runner.invoke(app, ["extend"])
+
+    assert result.exit_code == 0
+    assert "extended" in result.output.lower()
+
+
+def test_account_token_password_not_found():
+    """account token shows error when password not stored."""
+    with patch("pa_cli.cli.account_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as MockCrawler:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.side_effect = AuthError("Password not found")
+
+        result = runner.invoke(app, ["token"])
+
+    assert result.exit_code == 1
+    assert "Password not found" in result.output
+
+
+def test_account_extend_password_not_found():
+    """account extend shows error when password not stored."""
+    with patch("pa_cli.cli.account_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as MockCrawler:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.side_effect = AuthError("Password not found")
+
+        result = runner.invoke(app, ["extend"])
+
+    assert result.exit_code == 1
+    assert "Password not found" in result.output
+
+
+def test_account_token_network_error():
+    """account token shows error on network failure."""
+    with patch("pa_cli.cli.account_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as MockCrawler:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h", "password": "p"}
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.side_effect = NetworkError("Connection failed")
+
+        result = runner.invoke(app, ["token"])
+
+    assert result.exit_code == 1
+    assert "Network error" in result.output
+
+
+def test_account_extend_network_error():
+    """account extend shows error on network failure."""
+    with patch("pa_cli.cli.account_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as MockCrawler:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h", "password": "p"}
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.side_effect = NetworkError("Connection failed")
+
+        result = runner.invoke(app, ["extend"])
+
+    assert result.exit_code == 1
+    assert "Network error" in result.output

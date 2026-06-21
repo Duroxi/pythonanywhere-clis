@@ -2,7 +2,7 @@ from unittest.mock import patch, MagicMock, call
 from typer.testing import CliRunner
 
 from pa_cli.cli.init_cmd import app
-from pa_cli.exceptions import AuthError, NetworkError
+from pa_cli.exceptions import AuthError, NetworkError, NotFoundError
 
 runner = CliRunner()
 
@@ -122,3 +122,59 @@ def test_init_no_token_prompt_in_input(tmp_path):
         result = runner.invoke(app, input="testuser\nsecret123\n\n")
 
     assert "API Token" not in result.output
+
+
+def test_init_auth_error():
+    """init shows error on auth failure."""
+    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.side_effect = AuthError("Login failed")
+
+        result = runner.invoke(app, ["-u", "testuser", "-p", "wrongpass"])
+
+    assert result.exit_code == 1
+    assert "Auth error" in result.output
+
+
+def test_init_network_error():
+    """init shows error on network failure."""
+    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.side_effect = NetworkError("Connection failed")
+
+        result = runner.invoke(app, ["-u", "testuser", "-p", "pass"])
+
+    assert result.exit_code == 1
+    assert "Network error" in result.output
+
+
+def test_init_token_not_found_creates_new():
+    """init creates new token when not found."""
+    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = True
+        mock_crawler.get_token.side_effect = NotFoundError("Token not found")
+        mock_crawler.create_token.return_value = "newtoken"
+
+        result = runner.invoke(app, ["-u", "testuser", "-p", "pass"])
+
+    assert result.exit_code == 0
+    assert "newtoken" in result.output
+    mock_crawler.create_token.assert_called_once()
+
+
+def test_init_default_host():
+    """init uses default host when not specified."""
+    with patch("pa_cli.cli.init_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.init_cmd.AccountCrawler") as MockCrawler:
+        mock_crawler = MockCrawler.return_value
+        mock_crawler.login.return_value = True
+        mock_crawler.get_token.return_value = "token"
+
+        result = runner.invoke(app, ["-u", "testuser", "-p", "pass"])
+
+    assert result.exit_code == 0
+    mock_save.assert_any_call(username="testuser", password="pass", host="www.pythonanywhere.com")

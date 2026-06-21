@@ -25,7 +25,7 @@ def register():
         typer.echo("Please check your email to verify your account.")
         typer.echo("Then run: pa init")
     except AuthError as e:
-        typer.echo(f"注册失败: {e}", err=True)
+        typer.echo(f"Registration failed: {e}", err=True)
         raise typer.Exit(code=1)
     except NetworkError as e:
         typer.echo(f"Network error: {e}", err=True)

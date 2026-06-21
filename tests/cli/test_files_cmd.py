@@ -1,7 +1,9 @@
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 from typer.testing import CliRunner
 
 from pa_cli.cli.files_cmd import app
+from pa_cli.exceptions import APIError, NetworkError, NotFoundError
 
 runner = CliRunner()
 
@@ -314,3 +316,127 @@ def test_share_status_when_not_shared():
 
     assert result.exit_code == 0
     assert "File is not shared" in result.output
+
+
+def test_files_ls_network_error():
+    """files ls shows error on network failure."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.side_effect = NetworkError("Connection failed")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["ls"])
+
+    assert result.exit_code == 1
+    assert "Network error" in result.output
+
+
+def test_files_download_not_found():
+    """files download shows error when file not found."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.side_effect = NotFoundError("File not found")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["download", "missing.txt"])
+
+    assert result.exit_code == 1
+    assert "File not found" in result.output
+
+
+def test_files_rm_not_found():
+    """files rm shows error when file not found."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.side_effect = NotFoundError("File not found")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["rm", "missing.txt", "-f"])
+
+    assert result.exit_code == 1
+    assert "File not found" in result.output
+
+
+def test_files_upload_api_error():
+    """files upload shows error on API failure."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.upload.side_effect = APIError("API error 500")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        test_file = Path("./test_upload.txt")
+        test_file.write_text("test")
+        try:
+            result = runner.invoke(app, ["upload", str(test_file), "/home/testuser/test.txt"])
+        finally:
+            test_file.unlink()
+
+    assert result.exit_code == 1
+    assert "API error" in result.output
+
+
+def test_files_download_api_error():
+    """files download shows error on API failure."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {"test.txt": {"type": "file"}}
+        mock_client.download.side_effect = APIError("API error 500")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["download", "test.txt"])
+
+    assert result.exit_code == 1
+    assert "API error" in result.output
+
+
+def test_files_rm_api_error():
+    """files rm shows error on API failure."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.return_value = {"test.txt": {"type": "file"}}
+        mock_client.delete.side_effect = APIError("API error 500")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["rm", "test.txt", "-f"])
+
+    assert result.exit_code == 1
+    assert "API error" in result.output
+
+
+def test_files_share_api_error():
+    """files share shows error on API failure."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.share.side_effect = APIError("API error 500")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["share", "test.txt"])
+
+    assert result.exit_code == 1
+    assert "API error" in result.output
+
+
+def test_files_unshare_api_error():
+    """files unshare shows error on API failure."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.unshare.side_effect = APIError("API error 500")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["unshare", "test.txt"])
+
+    assert result.exit_code == 1
+    assert "API error" in result.output
+
+
+def test_files_share_status_api_error():
+    """files share-status shows error on API failure."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_share_status.side_effect = APIError("API error 500")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["share-status", "test.txt"])
+
+    assert result.exit_code == 1
+    assert "API error" in result.output

@@ -964,3 +964,233 @@ def test_get_disk_usage_uses_self_username_when_no_param():
 
     assert result == DISK_USAGE_RESPONSE
     assert "configuser" in mock_get.call_args[0][0]
+
+
+def test_enable_webapp():
+    """enable_webapp sends POST to enable form action."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(WEBAPPS_PAGE_WITH_ENABLE_FORM)), \
+         patch.object(crawler.session, "post", return_value=_mock_post_response(
+             "https://www.pythonanywhere.com/user/configuser/webapps/"
+         )) as mock_post:
+        result = crawler.enable_webapp("configuser.pythonanywhere.com")
+
+    assert result is True
+    mock_post.assert_called_once()
+    assert "enable" in mock_post.call_args[0][0]
+
+
+def test_disable_webapp():
+    """disable_webapp sends POST to disable form action."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(WEBAPPS_PAGE_WITH_DISABLE_FORM)), \
+         patch.object(crawler.session, "post", return_value=_mock_post_response(
+             "https://www.pythonanywhere.com/user/configuser/webapps/"
+         )) as mock_post:
+        result = crawler.disable_webapp("configuser.pythonanywhere.com")
+
+    assert result is True
+    mock_post.assert_called_once()
+    assert "disable" in mock_post.call_args[0][0]
+
+
+def test_enable_webapp_raises_when_already_enabled():
+    """enable_webapp raises NotFoundError when enable form not found."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(WEBAPPS_PAGE_WITH_DISABLE_FORM)):
+        with pytest.raises(NotFoundError, match="Enable form not found"):
+            crawler.enable_webapp("configuser.pythonanywhere.com")
+
+
+def test_disable_webapp_raises_when_already_disabled():
+    """disable_webapp raises NotFoundError when disable form not found."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(WEBAPPS_PAGE_WITH_ENABLE_FORM)):
+        with pytest.raises(NotFoundError, match="Disable form not found"):
+            crawler.disable_webapp("configuser.pythonanywhere.com")
+
+
+def test_get_disk_usage():
+    """get_disk_usage returns disk usage information."""
+    crawler = AccountCrawler()
+
+    disk_data = {
+        "used_bytes": 21045248,
+        "used": "20.1 MB",
+        "quota_bytes": 536870912,
+        "quota": "512.0 MB",
+        "percent": "4%",
+    }
+
+    with patch.object(crawler.session, "get", return_value=_mock_json_response(disk_data)) as mock_get:
+        result = crawler.get_disk_usage("configuser")
+
+    assert result == disk_data
+    mock_get.assert_called_once_with("https://www.pythonanywhere.com/user/configuser/quota_information/")
+
+
+def test_get_disk_usage_uses_self_username_when_no_param():
+    """get_disk_usage uses self.username when no username parameter given."""
+    crawler = AccountCrawler()
+
+    disk_data = {"used": "20.1 MB", "quota": "512.0 MB", "percent": "4%"}
+
+    with patch.object(crawler.session, "get", return_value=_mock_json_response(disk_data)) as mock_get:
+        result = crawler.get_disk_usage()
+
+    assert result == disk_data
+    assert "configuser" in mock_get.call_args[0][0]
+
+
+def test_login_raises_on_missing_csrf():
+    """login raises APIError when CSRF token is not found on page."""
+    crawler = AccountCrawler()
+    html_without_csrf = '<html><body><form></form></body></html>'
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(html_without_csrf)):
+        with pytest.raises(APIError, match="CSRF token not found"):
+            crawler.login()
+
+
+def test_login_raises_on_post_network_error():
+    """login raises NetworkError when POST request fails."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(LOGIN_PAGE_HTML)), \
+         patch.object(crawler.session, "post", side_effect=requests.ConnectionError("timeout")):
+        with pytest.raises(NetworkError, match="Login request failed"):
+            crawler.login()
+
+
+def test_register_raises_on_get_network_error():
+    """register raises NetworkError when fetching registration page fails."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", side_effect=requests.ConnectionError("timeout")):
+        with pytest.raises(NetworkError, match="Failed to fetch registration page"):
+            crawler.register("testuser", "test@example.com", "securepass123")
+
+
+def test_register_raises_on_post_network_error():
+    """register raises NetworkError when POST request fails."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response()), \
+         patch.object(crawler.session, "post", side_effect=requests.ConnectionError("timeout")):
+        with pytest.raises(NetworkError, match="Registration request failed"):
+            crawler.register("testuser", "test@example.com", "securepass123")
+
+
+def test_register_raises_on_missing_csrf():
+    """register raises APIError when CSRF token is not found on page."""
+    crawler = AccountCrawler()
+    html_without_csrf = '<html><body><form></form></body></html>'
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(html_without_csrf)):
+        with pytest.raises(APIError, match="CSRF token not found"):
+            crawler.register("testuser", "test@example.com", "securepass123")
+
+
+def test_login_raises_on_get_network_error():
+    """login raises NetworkError when fetching login page fails."""
+    crawler = AccountCrawler()
+
+    with patch.object(crawler.session, "get", side_effect=requests.ConnectionError("timeout")):
+        with pytest.raises(NetworkError, match="Failed to fetch login page"):
+            crawler.login()
+
+
+def test_login_raises_on_missing_csrf():
+    """login raises APIError when CSRF token is not found on page."""
+    crawler = AccountCrawler()
+    html_without_csrf = '<html><body><form></form></body></html>'
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(html_without_csrf)):
+        with pytest.raises(APIError, match="CSRF token not found"):
+            crawler.login()
+
+
+def test_create_token_success():
+    """create_token returns new token after creation."""
+    crawler = AccountCrawler()
+
+    account_page_html = '''
+    <html><body>
+    <form action="/user/configuser/account/new_token/" method="post">
+        <input type="hidden" name="csrfmiddlewaretoken" value="test-csrf">
+    </form>
+    <code class="api_token">new-token-123</code>
+    </body></html>
+    '''
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(account_page_html)), \
+         patch.object(crawler.session, "post", return_value=_mock_post_response(
+             "https://www.pythonanywhere.com/user/configuser/account/"
+         )):
+        result = crawler.create_token("configuser")
+
+    assert result == "new-token-123"
+
+
+def test_get_expiry_date_success():
+    """get_expiry_date returns expiry date text."""
+    crawler = AccountCrawler()
+
+    webapps_html = '''
+    <html><body>
+    <p class="webapp_expiry">Expires: 2026-12-31</p>
+    </body></html>
+    '''
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(webapps_html)):
+        result = crawler.get_expiry_date("configuser")
+
+    assert "2026-12-31" in result
+
+
+def test_get_expiry_date_returns_none_when_not_found():
+    """get_expiry_date returns None when expiry element not found."""
+    crawler = AccountCrawler()
+
+    webapps_html = '<html><body><p>No expiry info</p></body></html>'
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(webapps_html)):
+        result = crawler.get_expiry_date("configuser")
+
+    assert result is None
+
+
+def test_extend_expiry_success():
+    """extend_expiry returns True when extend form submitted successfully."""
+    crawler = AccountCrawler()
+
+    webapps_html = '''
+    <html><body>
+    <form action="/user/configuser/webapps/extend" method="post">
+        <input type="hidden" name="csrfmiddlewaretoken" value="extend-csrf">
+    </form>
+    </body></html>
+    '''
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(webapps_html)), \
+         patch.object(crawler.session, "post", return_value=_mock_post_response(
+             "https://www.pythonanywhere.com/user/configuser/webapps/", status_code=200
+         )):
+        result = crawler.extend_expiry("configuser")
+
+    assert result is True
+
+
+def test_extend_expiry_raises_when_form_not_found():
+    """extend_expiry raises NotFoundError when extend form not found."""
+    crawler = AccountCrawler()
+
+    webapps_html = '<html><body><p>No extend form</p></body></html>'
+
+    with patch.object(crawler.session, "get", return_value=_mock_get_response(webapps_html)):
+        with pytest.raises(NotFoundError, match="Extend form not found"):
+            crawler.extend_expiry("configuser")

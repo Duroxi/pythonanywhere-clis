@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import patch, MagicMock
 from typer.testing import CliRunner
 
@@ -8,6 +9,7 @@ runner = CliRunner()
 
 
 def test_deploy_command():
+    """deploy creates deployment successfully."""
     with patch("pa_cli.cli.deploy_cmd.Config.load") as mock_load, \
          patch("pa_cli.cli.deploy_cmd.deploy_workflow") as mock_deploy:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
@@ -20,6 +22,7 @@ def test_deploy_command():
 
 
 def test_deploy_with_custom_domain():
+    """deploy passes custom domain to workflow."""
     with patch("pa_cli.cli.deploy_cmd.Config.load") as mock_load, \
          patch("pa_cli.cli.deploy_cmd.deploy_workflow") as mock_deploy:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
@@ -34,6 +37,7 @@ def test_deploy_with_custom_domain():
 
 
 def test_deploy_with_python_version():
+    """deploy passes python version to workflow."""
     with patch("pa_cli.cli.deploy_cmd.Config.load") as mock_load, \
          patch("pa_cli.cli.deploy_cmd.deploy_workflow") as mock_deploy:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
@@ -48,6 +52,7 @@ def test_deploy_with_python_version():
 
 
 def test_deploy_dry_run():
+    """deploy --dry-run passes dry_run=True to workflow."""
     with patch("pa_cli.cli.deploy_cmd.Config.load") as mock_load, \
          patch("pa_cli.cli.deploy_cmd.deploy_workflow") as mock_deploy:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
@@ -59,42 +64,37 @@ def test_deploy_dry_run():
     mock_deploy.assert_called_once()
     call_kwargs = mock_deploy.call_args[1]
     assert call_kwargs["dry_run"] is True
-    # dry-run should not show "Deployed!" message
     assert "Deployed" not in result.output
 
 
-def test_deploy_handles_paclier_error():
+def test_deploy_default_domain():
+    """deploy uses default domain when not specified."""
     with patch("pa_cli.cli.deploy_cmd.Config.load") as mock_load, \
          patch("pa_cli.cli.deploy_cmd.deploy_workflow") as mock_deploy:
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
-        mock_deploy.side_effect = PACliError("Deploy failed")
+        mock_deploy.return_value = "https://u.pythonanywhere.com"
+
+        result = runner.invoke(app, ["./mysite"])
+
+    assert result.exit_code == 0
+    mock_deploy.assert_called_once()
+    call_kwargs = mock_deploy.call_args[1]
+    assert call_kwargs["domain"] == "u.pythonanywhere.com"
+
+
+@pytest.mark.parametrize("error_class,expected_msg", [
+    (NetworkError, "Network error"),
+    (APIError, "API error"),
+    (PACliError, "Deploy failed"),
+])
+def test_deploy_handles_errors(error_class, expected_msg):
+    """deploy shows appropriate error message for different error types."""
+    with patch("pa_cli.cli.deploy_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.deploy_cmd.deploy_workflow") as mock_deploy:
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
+        mock_deploy.side_effect = error_class("Test error")
 
         result = runner.invoke(app, ["./mysite"])
 
     assert result.exit_code == 1
-    assert "Deploy failed" in result.output
-
-
-def test_deploy_handles_network_error():
-    with patch("pa_cli.cli.deploy_cmd.Config.load") as mock_load, \
-         patch("pa_cli.cli.deploy_cmd.deploy_workflow") as mock_deploy:
-        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
-        mock_deploy.side_effect = NetworkError("Connection failed")
-
-        result = runner.invoke(app, ["./mysite"])
-
-    assert result.exit_code == 1
-    # NetworkError is caught by PACliError handler since NetworkError inherits from PACliError
-    assert "Deploy failed" in result.output
-
-
-def test_deploy_handles_api_error():
-    with patch("pa_cli.cli.deploy_cmd.Config.load") as mock_load, \
-         patch("pa_cli.cli.deploy_cmd.deploy_workflow") as mock_deploy:
-        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
-        mock_deploy.side_effect = APIError("API error 500")
-
-        result = runner.invoke(app, ["./mysite"])
-
-    assert result.exit_code == 1
-    assert "API error" in result.output
+    assert expected_msg in result.output

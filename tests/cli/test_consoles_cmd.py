@@ -112,16 +112,18 @@ def test_console_send_with_output():
     with patch("pa_cli.cli.consoles_cmd.Config.load") as mock_load, \
          patch("pa_cli.cli.consoles_cmd.ConsolesClient") as mock_cls, \
          patch("pa_cli.cli.consoles_cmd.time.sleep"), \
-         patch("pa_cli.cli.consoles_cmd.uuid.uuid4") as mock_uuid:
+         patch("pa_cli.cli.consoles_cmd.uuid.uuid4") as mock_uuid, \
+         patch("pa_cli.cli.consoles_cmd.time.time", return_value=1234567890):
         mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
         mock_client = MagicMock()
         mock_cls.return_value = mock_client
         mock_uuid.return_value = MagicMock(hex="abc123456789")
 
         # First call: baseline (empty), second call: output with marker
+        marker = "__PA_CLI_DONE_1234567890_abc123456789__"
         mock_client.get_output.side_effect = [
             {"output": ""},  # baseline
-            {"output": "$ ls\nfile1.txt\nfile2.txt\n__PA_DONE_abc12345__\n$ "},  # result
+            {"output": f"$ ls\nfile1.txt\nfile2.txt\n{marker}\n$ "},  # result
         ]
 
         result = runner.invoke(app, ["send", "42", "ls"])
@@ -129,7 +131,7 @@ def test_console_send_with_output():
     assert result.exit_code == 0
     assert "file1.txt" in result.output
     assert "file2.txt" in result.output
-    assert "PA_DONE" not in result.output
+    assert "PA_CLI_DONE" not in result.output
 
 
 def test_console_send_timeout():
@@ -215,3 +217,29 @@ def test_console_get_or_create_error():
 
     assert result.exit_code == 1
     assert "Login failed" in result.output
+
+
+def test_console_send_wait_default():
+    """console send waits for output by default."""
+    with patch("pa_cli.cli.consoles_cmd.Config.load") as mock_load, \
+         patch("pa_cli.cli.consoles_cmd.ConsolesClient") as mock_cls, \
+         patch("pa_cli.cli.consoles_cmd.time.sleep"), \
+         patch("pa_cli.cli.consoles_cmd.uuid.uuid4") as mock_uuid, \
+         patch("pa_cli.cli.consoles_cmd.time.time", return_value=1234567890):
+        mock_load.return_value = {"username": "u", "token": "t", "host": "h"}
+        mock_client = MagicMock()
+        mock_cls.return_value = mock_client
+        mock_uuid.return_value = MagicMock(hex="abc123456789")
+
+        marker = "__PA_CLI_DONE_1234567890_abc123456789__"
+        mock_client.get_output.side_effect = [
+            {"output": ""},  # baseline
+            {"output": f"$ echo hello\nhello\n{marker}\n$ "},  # result
+        ]
+
+        result = runner.invoke(app, ["send", "42", "echo hello"])
+
+    assert result.exit_code == 0
+    assert "hello" in result.output
+
+

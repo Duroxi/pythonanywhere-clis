@@ -45,3 +45,19 @@ def test_kill_console():
 
     with patch.object(client, "_request", return_value=mock_resp):
         client.kill("testuser", 42)
+
+
+def test_list_consoles():
+    """list returns list of consoles."""
+    client = ConsolesClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = [
+        {"id": 1, "name": "bash"},
+        {"id": 2, "name": "python3.10"},
+    ]
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        result = client.list("testuser")
+
+    mock_req.assert_called_once_with("GET", "/api/v0/user/{username}/consoles/", username="testuser")
+    assert len(result) == 2
+    assert result[0]["id"] == 1

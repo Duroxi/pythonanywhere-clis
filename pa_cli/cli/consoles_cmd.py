@@ -78,8 +78,9 @@ def send(
     baseline = client.get_output(account["username"], console_id)
     baseline_output = baseline.get("output", "")
 
-    # Generate unique completion marker
-    marker = f"__PA_DONE_{uuid.uuid4().hex[:8]}__"
+    # Generate unique completion marker (timestamp + random hex)
+    import time as _time
+    marker = f"__PA_CLI_DONE_{int(_time.time())}_{uuid.uuid4().hex}__"
 
     # Send command + marker echo
     client.send_input(

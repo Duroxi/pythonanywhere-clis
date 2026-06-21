@@ -33,12 +33,12 @@ def deploy(
 
         if not dry_run:
             typer.echo(f"\nDeployed! Visit: {url}")
-    except PACliError as e:
-        typer.echo(f"Deploy failed: {e}", err=True)
-        raise typer.Exit(code=1)
     except NetworkError as e:
         typer.echo(f"Network error: {e}", err=True)
         raise typer.Exit(code=1)
     except APIError as e:
         typer.echo(f"API error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except PACliError as e:
+        typer.echo(f"Deploy failed: {e}", err=True)
         raise typer.Exit(code=1)

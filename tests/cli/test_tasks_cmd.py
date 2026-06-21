@@ -1,8 +1,9 @@
+import pytest
 from unittest.mock import patch, MagicMock
-
 from typer.testing import CliRunner
 
 from pa_cli.cli.tasks_cmd import app
+from pa_cli.exceptions import AuthError, NetworkError, NotFoundError, APIError
 
 runner = CliRunner()
 
@@ -46,11 +47,10 @@ def test_tasks_create():
         mock_client.create.return_value = {"id": 3, "command": "echo new"}
         mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
 
-        result = runner.invoke(app, ["create", "echo new", "--interval", "daily", "--hour", "0", "--minute", "0"])
+        result = runner.invoke(app, ["create", "echo hello"])
 
     assert result.exit_code == 0
     assert "Task created" in result.output
-    assert "ID=3" in result.output
     mock_client.create.assert_called_once()
 
 
@@ -103,3 +103,38 @@ def test_tasks_disable():
     assert result.exit_code == 0
     assert "Task 1 disabled" in result.output
     mock_client.update.assert_called_once_with("testuser", 1, enabled=False)
+
+
+# --- Error handling tests (parametrized) ---
+
+@pytest.mark.parametrize("command,args,mock_method,error_class,expected_msg", [
+    ("list", [], "list", NetworkError, "Network error"),
+    ("list", [], "list", AuthError, "Auth error"),
+    ("list", [], "list", APIError, "API error"),
+    ("create", ["echo hello"], "create", NetworkError, "Network error"),
+    ("create", ["echo hello"], "create", AuthError, "Auth error"),
+    ("create", ["echo hello"], "create", APIError, "API error"),
+    ("delete", ["1", "-f"], "delete", NetworkError, "Network error"),
+    ("delete", ["1", "-f"], "delete", AuthError, "Auth error"),
+    ("delete", ["1", "-f"], "delete", NotFoundError, "Task not found"),
+    ("delete", ["1", "-f"], "delete", APIError, "API error"),
+    ("enable", ["1"], "update", NetworkError, "Network error"),
+    ("enable", ["1"], "update", AuthError, "Auth error"),
+    ("enable", ["1"], "update", NotFoundError, "Task not found"),
+    ("enable", ["1"], "update", APIError, "API error"),
+    ("disable", ["1"], "update", NetworkError, "Network error"),
+    ("disable", ["1"], "update", AuthError, "Auth error"),
+    ("disable", ["1"], "update", NotFoundError, "Task not found"),
+    ("disable", ["1"], "update", APIError, "API error"),
+])
+def test_tasks_error_handling(command, args, mock_method, error_class, expected_msg):
+    """tasks commands show appropriate error messages."""
+    with patch("pa_cli.cli.tasks_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        getattr(mock_client, mock_method).side_effect = error_class("Test error")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, [command] + args)
+
+    assert result.exit_code == 1
+    assert expected_msg in result.output

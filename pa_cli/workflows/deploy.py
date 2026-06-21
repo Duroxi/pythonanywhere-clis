@@ -24,8 +24,15 @@ def _wait_for_console(client: ConsolesClient, username: str, console_id: int) ->
         output = result.get("output", "")
         if output != last_output:
             last_output = output
-            # PA console shows $ or >>> when idle
-            if output.rstrip().endswith("$") or output.rstrip().endswith(">>>"):
+            # PythonAnywhere bash prompt patterns:
+            # - "username@host:~$ " (standard)
+            # - "$ " (simple)
+            # - ">>> " (Python REPL)
+            stripped = output.rstrip()
+            if (stripped.endswith("$") or
+                stripped.endswith(">>>") or
+                stripped.endswith("]$") or
+                stripped.endswith("#")):
                 break
     return last_output
 

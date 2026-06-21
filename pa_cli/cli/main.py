@@ -1,3 +1,6 @@
+import logging
+import sys
+
 import typer
 
 from pa_cli.cli.init_cmd import app as init_app
@@ -11,10 +14,41 @@ from pa_cli.cli.status_cmd import app as status_app
 from pa_cli.cli.tasks_cmd import app as tasks_app
 from pa_cli.cli.always_on_cmd import app as always_on_app
 
+try:
+    from importlib.metadata import version
+    __version__ = version("pa-cli")
+except Exception:
+    __version__ = "0.0.0"
+
+
+def version_callback(value: bool):
+    if value:
+        typer.echo(f"pa-cli {__version__}")
+        raise typer.Exit()
+
+
+def verbose_callback(value: bool):
+    if value:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            stream=sys.stderr,
+        )
+    return value
+
+
 app = typer.Typer(
     help="CLI tool for automating PythonAnywhere deployments.",
     no_args_is_help=True,
 )
+
+
+@app.callback()
+def main(
+    version: bool = typer.Option(False, "--version", "-V", help="Show version and exit", callback=version_callback, is_eager=True),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging", callback=verbose_callback, is_eager=True),
+):
+    pass
 
 # Direct commands (single command)
 app.add_typer(init_app, name="init", help="Configure PythonAnywhere account")

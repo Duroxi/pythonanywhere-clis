@@ -2,6 +2,7 @@ import base64
 import hashlib
 import json
 import os
+import platform
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -77,7 +78,10 @@ def _validate_config(data: dict) -> ConfigData:
 
 def _get_machine_key() -> bytes:
     """Generate encryption key from machine-specific info."""
-    seed = f"{os.environ.get('USERNAME', '')}-{os.environ.get('COMPUTERNAME', '')}"
+    import getpass
+    username = getpass.getuser()
+    hostname = platform.node()
+    seed = f"{username}-{hostname}"
     return hashlib.sha256(seed.encode()).digest()
 
 
