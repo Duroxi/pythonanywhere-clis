@@ -1,6 +1,6 @@
-# pythonanywhere-cli 架构文档
+# pythonanywhere-clis 架构文档
 
-本文档描述 pythonanywhere-cli (`pa`) 项目的整体架构设计、模块职责和扩展方式。
+本文档描述 pythonanywhere-clis (`pa`) 项目的整体架构设计、模块职责和扩展方式。
 
 ---
 

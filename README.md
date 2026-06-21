@@ -5,7 +5,7 @@ CLI tool for automating PythonAnywhere deployments. **Local project → Live web
 ## Installation
 
 ```bash
-pip install -e .
+pip install pythonanywhere-clis
 ```
 
 ## Quick Start

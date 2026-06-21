@@ -1,10 +1,10 @@
 # 快速开始指南
 
-欢迎使用 pythonanywhere-cli (`pa`)！本指南将帮助你从零开始，将本地 Python 项目部署到 PythonAnywhere。
+欢迎使用 pythonanywhere-clis (`pa`)！本指南将帮助你从零开始，将本地 Python 项目部署到 PythonAnywhere。
 
 ## 目录
 
-- [什么是 pythonanywhere-cli](#什么是-pythonanywhere-cli)
+- [什么是 pythonanywhere-clis](#什么是-pythonanywhere-clis)
 - [环境要求](#环境要求)
 - [安装](#安装)
 - [账号配置](#账号配置)
@@ -15,9 +15,9 @@
 
 ---
 
-## 什么是 pythonanywhere-cli
+## 什么是 pythonanywhere-clis
 
-pythonanywhere-cli 是一个命令行工具，用于自动化管理 PythonAnywhere 上的资源。它的核心价值是：
+pythonanywhere-clis 是一个命令行工具，用于自动化管理 PythonAnywhere 上的资源。它的核心价值是：
 
 - **一行命令部署** - `pa deploy ./my-site` 完成上传、环境配置、网站创建、重载全流程
 - **无需浏览器** - 所有操作通过命令行完成，适合脚本和 AI Agent 调用
@@ -37,7 +37,13 @@ pythonanywhere-cli 是一个命令行工具，用于自动化管理 PythonAnywhe
 
 ## 安装
 
-### 方式一：从源码安装（推荐）
+### 方式一：从 PyPI 安装（推荐）
+
+```bash
+pip install pythonanywhere-clis
+```
+
+### 方式二：从源码安装
 
 ```bash
 # 克隆仓库
@@ -46,12 +52,6 @@ cd pythonanywhere-cli
 
 # 安装（开发模式）
 pip install -e .
-```
-
-### 方式二：直接安装依赖
-
-```bash
-pip install typer requests beautifulsoup4 websocket-client
 ```
 
 ### 验证安装

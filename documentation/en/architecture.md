@@ -1,6 +1,6 @@
-# pythonanywhere-cli Architecture Documentation
+# pythonanywhere-clis Architecture Documentation
 
-This document describes the overall architecture design, module responsibilities, and extension patterns of the pythonanywhere-cli (`pa`) project.
+This document describes the overall architecture design, module responsibilities, and extension patterns of the pythonanywhere-clis (`pa`) project.
 
 ---
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-pythonanywhere-cli (`pa`) is a command-line interface for [PythonAnywhere](https://www.pythonanywhere.com), wrapping their REST API for browser-free resource management. Targets developers and AI agents on the free tier (no SSH).
+pythonanywhere-clis (`pa`) is a command-line interface for [PythonAnywhere](https://www.pythonanywhere.com), wrapping their REST API for browser-free resource management. Targets developers and AI agents on the free tier (no SSH).
 
 ## Architecture
 

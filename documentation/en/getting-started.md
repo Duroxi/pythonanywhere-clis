@@ -1,10 +1,10 @@
 # Getting Started Guide
 
-Welcome to pythonanywhere-cli (`pa`)! This guide will help you deploy your local Python project to PythonAnywhere from scratch.
+Welcome to pythonanywhere-clis (`pa`)! This guide will help you deploy your local Python project to PythonAnywhere from scratch.
 
 ## Table of Contents
 
-- [What is pythonanywhere-cli](#what-is-pythonanywhere-cli)
+- [What is pythonanywhere-clis](#what-is-pythonanywhere-clis)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Account Setup](#account-setup)
@@ -15,9 +15,9 @@ Welcome to pythonanywhere-cli (`pa`)! This guide will help you deploy your local
 
 ---
 
-## What is pythonanywhere-cli
+## What is pythonanywhere-clis
 
-pythonanywhere-cli is a command-line tool for automating PythonAnywhere resource management. Its core value:
+pythonanywhere-clis is a command-line tool for automating PythonAnywhere resource management. Its core value:
 
 - **One-command deployment** - `pa deploy ./my-site` handles upload, environment setup, webapp creation, and reload
 - **No browser needed** - All operations via command line, suitable for scripts and AI Agents
@@ -37,7 +37,13 @@ pythonanywhere-cli is a command-line tool for automating PythonAnywhere resource
 
 ## Installation
 
-### Option 1: Install from source (Recommended)
+### Option 1: Install from PyPI (Recommended)
+
+```bash
+pip install pythonanywhere-clis
+```
+
+### Option 2: Install from source
 
 ```bash
 # Clone repository
@@ -46,12 +52,6 @@ cd pythonanywhere-cli
 
 # Install in development mode
 pip install -e .
-```
-
-### Option 2: Install dependencies directly
-
-```bash
-pip install typer requests beautifulsoup4 websocket-client
 ```
 
 ### Verify installation
