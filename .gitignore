@@ -2,7 +2,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.egg-info/
-dist/
 build/
 .eggs/
 *.egg
@@ -14,4 +13,3 @@ helper_scripts/
 docs/superpowers/
 backup/
 myTest/
-dist/
