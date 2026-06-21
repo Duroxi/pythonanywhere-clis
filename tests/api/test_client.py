@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from pa_cli.api.client import BaseClient
+from pa_cli.exceptions import NetworkError, APIError
 
 
 def test_base_client_sets_auth_header():
@@ -114,3 +115,38 @@ def test_base_client_default_host():
 
     client = BaseClient(token="t")
     assert client.host == "www.pythonanywhere.com"
+
+
+def test_base_client_raises_on_request_exception():
+    """BaseClient raises NetworkError on generic RequestException."""
+    client = BaseClient(token="t", host="www.pythonanywhere.com")
+
+    with patch.object(client.session, "request", side_effect=requests.RequestException("generic error")):
+        with pytest.raises(NetworkError, match="Request failed"):
+            client._request("GET", "/api/v0/user/{username}/test/", username="u")
+
+
+def test_base_client_returns_response_on_success():
+    """BaseClient returns response on successful request."""
+    client = BaseClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+
+    with patch.object(client.session, "request", return_value=mock_resp):
+        result = client._request("GET", "/api/v0/user/{username}/test/", username="u")
+
+    assert result == mock_resp
+
+
+def test_base_client_handles_non_json_error_response():
+    """BaseClient handles non-JSON error response gracefully."""
+    client = BaseClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+    mock_resp.raise_for_status.side_effect = requests.HTTPError("500 Error")
+    mock_resp.json.side_effect = ValueError("Not JSON")
+    mock_resp.text = "Internal Server Error"
+
+    with patch.object(client.session, "request", return_value=mock_resp):
+        with pytest.raises(APIError, match="Internal Server Error"):
+            client._request("GET", "/api/v0/user/{username}/test/", username="u")

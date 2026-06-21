@@ -440,3 +440,61 @@ def test_files_share_status_api_error():
 
     assert result.exit_code == 1
     assert "API error" in result.output
+
+
+def test_files_ls_not_found():
+    """files ls shows error when path not found."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.side_effect = NotFoundError("Path not found")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["ls"])
+
+    assert result.exit_code == 1
+    assert "Path not found" in result.output
+
+
+def test_files_ls_api_error():
+    """files ls shows error on API failure."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.list.side_effect = APIError("API error 500")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["ls"])
+
+    assert result.exit_code == 1
+    assert "API error" in result.output
+
+
+def test_files_upload_local_not_found(tmp_path):
+    """files upload shows error when local file not found."""
+    result = runner.invoke(app, ["upload", "/nonexistent/file.txt", "/remote/path"])
+
+    assert result.exit_code == 1
+    assert "does not exist" in result.output
+
+
+def test_files_upload_directory_without_recursive(tmp_path):
+    """files upload shows error when uploading directory without -r."""
+    test_dir = tmp_path / "testdir"
+    test_dir.mkdir()
+
+    result = runner.invoke(app, ["upload", str(test_dir), "/remote/path"])
+
+    assert result.exit_code == 1
+    assert "recursive" in result.output.lower()
+
+
+def test_files_share_status_network_error():
+    """files share-status shows error on network failure."""
+    with patch("pa_cli.cli.files_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_share_status.side_effect = NetworkError("Connection failed")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+
+        result = runner.invoke(app, ["share-status", "test.txt"])
+
+    assert result.exit_code == 1
+    assert "Network error" in result.output
