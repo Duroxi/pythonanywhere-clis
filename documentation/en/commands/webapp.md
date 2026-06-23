@@ -69,21 +69,23 @@ Configure the source directory and virtual environment path for a web applicatio
 ### Syntax
 
 ```bash
-pa webapp config <domain_name> -s <source_dir> [-v <virtualenv>]
+pa webapp config [<domain_name>] [-s <source_dir>] [-v <virtualenv>] [-p <python_version>] [-w <working_dir>]
 ```
 
 ### Parameters
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `domain_name` | Yes | Domain name |
+| `domain_name` | No | Domain name (default: `{username}.pythonanywhere.com`) |
 
 ### Options
 
 | Option | Required | Description |
 |--------|----------|-------------|
-| `-s`, `--source-dir` | Yes | Absolute path to the source directory |
+| `-s`, `--source-dir` | No | Absolute path to the source directory |
 | `-v`, `--virtualenv` | No | Absolute path to the virtual environment |
+| `-p`, `--python-version` | No | Python version (e.g., `3.10`, `3.11`) |
+| `-w`, `--working-dir` | No | Working directory path |
 
 ### Examples
 
@@ -98,6 +100,20 @@ Webapp myuser.pythonanywhere.com configured.
 
 ```bash
 $ pa webapp config myuser.pythonanywhere.com -s /home/myuser/myproject -v /home/myuser/.virtualenvs/myproject
+Webapp myuser.pythonanywhere.com configured.
+```
+
+**Configure Python version:**
+
+```bash
+$ pa webapp config myuser.pythonanywhere.com -p 3.11
+Webapp myuser.pythonanywhere.com configured.
+```
+
+**Configure multiple options:**
+
+```bash
+$ pa webapp config myuser.pythonanywhere.com -s /home/myuser/myproject -v /home/myuser/.virtualenvs/myproject -p 3.11 -w /home/myuser/myproject
 Webapp myuser.pythonanywhere.com configured.
 ```
 

@@ -69,21 +69,23 @@ Error: API error 401: Invalid token.
 ### 语法
 
 ```bash
-pa webapp config <domain_name> -s <source_dir> [-v <virtualenv>]
+pa webapp config [<domain_name>] [-s <source_dir>] [-v <virtualenv>] [-p <python_version>] [-w <working_dir>]
 ```
 
 ### 参数
 
 | 参数 | 必填 | 说明 |
 |------|------|------|
-| `domain_name` | 是 | 域名 |
+| `domain_name` | 否 | 域名（默认：`{username}.pythonanywhere.com`） |
 
 ### 选项
 
 | 选项 | 必填 | 说明 |
 |------|------|------|
-| `-s`, `--source-dir` | 是 | 源码目录的绝对路径 |
+| `-s`, `--source-dir` | 否 | 源码目录的绝对路径 |
 | `-v`, `--virtualenv` | 否 | 虚拟环境的绝对路径 |
+| `-p`, `--python-version` | 否 | Python 版本（如 `3.10`、`3.11`） |
+| `-w`, `--working-dir` | 否 | 工作目录路径 |
 
 ### 示例
 
@@ -98,6 +100,20 @@ Webapp myuser.pythonanywhere.com configured.
 
 ```bash
 $ pa webapp config myuser.pythonanywhere.com -s /home/myuser/myproject -v /home/myuser/.virtualenvs/myproject
+Webapp myuser.pythonanywhere.com configured.
+```
+
+**配置 Python 版本：**
+
+```bash
+$ pa webapp config myuser.pythonanywhere.com -p 3.11
+Webapp myuser.pythonanywhere.com configured.
+```
+
+**配置多个选项：**
+
+```bash
+$ pa webapp config myuser.pythonanywhere.com -s /home/myuser/myproject -v /home/myuser/.virtualenvs/myproject -p 3.11 -w /home/myuser/myproject
 Webapp myuser.pythonanywhere.com configured.
 ```
 

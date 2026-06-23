@@ -301,19 +301,37 @@ Password saved successfully.
 ### 语法
 
 ```bash
-pa account token
+pa account token [-r | --revoke]
 ```
+
+### 选项
+
+| 选项 | 说明 |
+|------|------|
+| `-r`, `--revoke` | 撤销当前 Token 并创建新的 |
 
 ### 说明
 
 使用配置文件中的用户名和密码，模拟浏览器登录 PythonAnywhere，从账户页面抓取 API Token 并保存到配置文件。
 
+如果 Token 不存在，会自动创建一个新 Token。
+
 ### 示例
+
+**获取现有 Token：**
 
 ```bash
 $ pa account token
+[account: myuser]
 API token: abc123def456ghi789
-Token saved to config.
+```
+
+**撤销并创建新 Token：**
+
+```bash
+$ pa account token --revoke
+[account: myuser]
+Token revoked. New token: xyz789newtoken
 ```
 
 ### 错误场景

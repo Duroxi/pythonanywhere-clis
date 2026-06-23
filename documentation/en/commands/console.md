@@ -112,7 +112,7 @@ Send a command to console and get output.
 ### Syntax
 
 ```bash
-pa console send <console_id> <command> [--wait/--no-wait]
+pa console send <console_id> <command> [--wait/--no-wait] [--timeout <seconds>]
 ```
 
 ### Parameters
@@ -128,6 +128,7 @@ pa console send <console_id> <command> [--wait/--no-wait]
 |--------|---------|-------------|
 | `--wait` / `-w` | True | Wait and get output |
 | `--no-wait` / `-W` | - | Send command without waiting |
+| `-t`, `--timeout` | `30` | Max seconds to wait for output |
 
 ### Examples
 
@@ -144,6 +145,12 @@ hello
 
 ```bash
 $ pa console send 46955916 "long-running-command" --no-wait
+```
+
+**Send command with custom timeout:**
+
+```bash
+$ pa console send 46955916 "pip install flask" --timeout 120
 ```
 
 ### Error Scenarios

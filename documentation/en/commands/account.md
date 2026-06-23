@@ -301,19 +301,37 @@ Log in via the crawler and fetch the API Token.
 ### Syntax
 
 ```bash
-pa account token
+pa account token [-r | --revoke]
 ```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-r`, `--revoke` | Revoke current token and create a new one |
 
 ### Description
 
 Uses the username and password from the configuration file to simulate a browser login to PythonAnywhere, scrapes the API Token from the account page, and saves it to the configuration file.
 
-### Example
+If Token doesn't exist, automatically creates a new one.
+
+### Examples
+
+**Get existing token:**
 
 ```bash
 $ pa account token
+[account: myuser]
 API token: abc123def456ghi789
-Token saved to config.
+```
+
+**Revoke and create new token:**
+
+```bash
+$ pa account token --revoke
+[account: myuser]
+Token revoked. New token: xyz789newtoken
 ```
 
 ### Error Scenarios

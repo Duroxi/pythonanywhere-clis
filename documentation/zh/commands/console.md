@@ -112,7 +112,7 @@ Error: API error 400: You have too many consoles.
 ### 语法
 
 ```bash
-pa console send <console_id> <command> [--wait/--no-wait]
+pa console send <console_id> <command> [--wait/--no-wait] [--timeout <seconds>]
 ```
 
 ### 参数
@@ -128,6 +128,7 @@ pa console send <console_id> <command> [--wait/--no-wait]
 |------|--------|------|
 | `--wait` / `-w` | True | 等待并获取输出 |
 | `--no-wait` / `-W` | - | 只发送命令，不等待输出 |
+| `-t`, `--timeout` | `30` | 等待输出的最大秒数 |
 
 ### 示例
 
@@ -144,6 +145,12 @@ hello
 
 ```bash
 $ pa console send 46955916 "long-running-command" --no-wait
+```
+
+**自定义超时时间：**
+
+```bash
+$ pa console send 46955916 "pip install flask" --timeout 120
 ```
 
 ### 错误场景

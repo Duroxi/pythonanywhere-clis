@@ -11,7 +11,7 @@
 ### 语法
 
 ```bash
-pa deploy <local_dir> [--domain <domain>] [--python <python_version>]
+pa deploy <local_dir> [--domain <domain>] [--python <python_version>] [--dry-run]
 ```
 
 ### 参数
@@ -26,6 +26,7 @@ pa deploy <local_dir> [--domain <domain>] [--python <python_version>]
 |------|--------|------|
 | `-d`, `--domain` | `{username}.pythonanywhere.com` | 目标域名 |
 | `-p`, `--python` | `python310` | Python 版本 |
+| `-n`, `--dry-run` | False | 预览部署，不实际执行 |
 
 ### 说明
 

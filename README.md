@@ -33,7 +33,7 @@ pa deploy ./my-site
 | `pa account switch <username>` | Switch default account | - |
 | `pa account remove <username>` | Remove an account | - |
 | `pa account login` | Store password for crawler operations | - |
-| `pa account token` | Fetch API token from account page | Password |
+| `pa account token` | Fetch API token (use `--revoke` to refresh) | Password |
 | `pa account extend` | Extend free tier account expiry | Password |
 
 ### File Management

@@ -11,7 +11,7 @@ Deploy a local project directory to PythonAnywhere in one command.
 ### Syntax
 
 ```bash
-pa deploy <local_dir> [--domain <domain>] [--python <python_version>]
+pa deploy <local_dir> [--domain <domain>] [--python <python_version>] [--dry-run]
 ```
 
 ### Parameters
@@ -26,6 +26,7 @@ pa deploy <local_dir> [--domain <domain>] [--python <python_version>]
 |--------|---------|-------------|
 | `-d`, `--domain` | `{username}.pythonanywhere.com` | Target domain name |
 | `-p`, `--python` | `python310` | Python version |
+| `-n`, `--dry-run` | False | Preview deploy without executing |
 
 ### Description
 
