@@ -8,19 +8,22 @@ wrapping their REST API for browser-free resource management.
    :maxdepth: 2
    :caption: Getting Started
 
-   getting-started
+   en/getting-started
+   zh/getting-started
 
 .. toctree::
    :maxdepth: 2
    :caption: Commands
 
-   commands/index
+   en/commands/index
+   zh/commands/index
 
 .. toctree::
    :maxdepth: 2
    :caption: Architecture
 
-   architecture
+   en/architecture
+   zh/architecture
 
 Indices and tables
 ==================
