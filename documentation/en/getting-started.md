@@ -301,3 +301,7 @@ ConnectionError: ('Connection aborted.', RemoteDisconnected(...))
 - [Command Reference](commands/) - Detailed documentation for all commands
 - [Architecture](architecture.md) - Understand project internals
 - [GitHub Repository](https://github.com/Duroxi/pythonanywhere-cli) - View source code
+
+---
+
+*Last updated: 2026-06-24*
