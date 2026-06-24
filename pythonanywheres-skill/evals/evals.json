@@ -1,0 +1,23 @@
+{
+  "skill_name": "pythonanywheres-skill",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have a Flask web app in ./my-flask-app directory. I want to deploy it to PythonAnywhere. My username is 'testuser'. Walk me through the steps.",
+      "expected_output": "Agent should use pa init and pa deploy commands, explain the process, and provide the final URL",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need to check the error logs for my web app 'mysite.pythonanywhere.com' and then reload it. Also show me the traffic statistics.",
+      "expected_output": "Agent should use pa webapp logs, pa webapp reload, and pa webapp hits commands",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Set up a daily backup task that runs at 3 AM to backup my database. The backup script is at /home/myuser/backup.py.",
+      "expected_output": "Agent should use pa tasks create with --interval daily --hour 3 parameters",
+      "files": []
+    }
+  ]
+}
