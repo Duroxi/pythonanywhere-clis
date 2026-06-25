@@ -1,6 +1,18 @@
 # pythonanywhere-cli
 
+[![PyPI version](https://img.shields.io/pypi/v/pythonanywhere-clis)](https://pypi.org/project/pythonanywhere-clis/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pythonanywhere-clis)](https://pypi.org/project/pythonanywhere-clis/)
+[![Tests](https://img.shields.io/badge/tests-454%20passed-brightgreen)](https://github.com/Duroxi/pythonanywhere-clis/actions)
+[![Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen)](https://github.com/Duroxi/pythonanywhere-clis)
+[![Documentation](https://readthedocs.org/projects/pythonanywhere-clis/badge/?version=latest)](https://pythonanywhere-clis.readthedocs.io/en/latest/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub stars](https://img.shields.io/github/stars/Duroxi/pythonanywhere-clis)](https://github.com/Duroxi/pythonanywhere-clis/stargazers)
+
 CLI tool for automating PythonAnywhere deployments. **Local project → Live website, one step.**
+
+## Documentation
+
+Full documentation is available at **[pythonanywhere-clis.readthedocs.io](https://pythonanywhere-clis.readthedocs.io/en/latest/)**
 
 ## Installation
 
@@ -41,12 +53,9 @@ pa deploy ./my-site
 | Command | Description | Auth |
 |---------|-------------|------|
 | `pa files ls [path]` | List remote directory contents | Token |
-| `pa files download <remote> [local]` | Download a file | Token |
-| `pa files download <remote> [local] -r` | Download directory recursively | Token |
-| `pa files rm <path>` | Delete a remote file | Token |
-| `pa files rm <path> -r` | Delete directory recursively | Token |
-| `pa files upload <local> <remote>` | Upload a single file | Token |
-| `pa files upload <local> <remote> -r` | Upload directory recursively | Token |
+| `pa files upload <local> <remote> [-r]` | Upload file or directory | Token |
+| `pa files download <remote> [local] [-r]` | Download file or directory | Token |
+| `pa files rm <path> [-r] [-f]` | Delete remote file or directory | Token |
 | `pa files share <path>` | Share a file and get link | Token |
 | `pa files unshare <path>` | Stop sharing a file | Token |
 | `pa files share-status <path>` | Check if a file is shared | Token |
@@ -56,35 +65,34 @@ pa deploy ./my-site
 | Command | Description | Auth |
 |---------|-------------|------|
 | `pa console list` | List all consoles | Token |
-| `pa console create` | Create a new console | Token |
-| `pa console send <id> <cmd>` | Send command and get output | Token |
+| `pa console create [--executable]` | Create a new console | Token |
+| `pa console send <id> <cmd> [--timeout]` | Send command and get output | Token |
 | `pa console kill <id>` | Kill a console | Token |
 | `pa console activate <id>` | Activate console via WebSocket | Password |
-| `pa console get-or-create` | Get existing or create new console | Password |
+| `pa console get-or-create [-e]` | Get existing or create new console | Password |
 
 ### Web App Management
 
 | Command | Description | Auth |
 |---------|-------------|------|
-| `pa webapp create <domain>` | Create a web app | Token |
-| `pa webapp config <domain> --source-dir <path>` | Configure source directory | Token |
-| `pa webapp config <domain> --virtualenv <path>` | Configure virtualenv path | Token |
-| `pa webapp static <domain> --url <url> --path <path>` | Add static file mapping | Token |
+| `pa webapp create <domain> [-p]` | Create a web app | Token |
+| `pa webapp config <domain> [-s] [-v] [-p] [-w]` | Configure web app | Token |
+| `pa webapp static <domain> --url --path` | Add static file mapping | Token |
 | `pa webapp reload <domain>` | Reload web app (API) | Token |
 | `pa webapp reload-crawler <domain>` | Reload web app (crawler) | Password |
 | `pa webapp hits <domain>` | Get hit statistics | Password |
-| `pa webapp delete <domain>` | Delete a web app | Token |
-| `pa webapp enable <domain>` | Enable a web app | Token |
-| `pa webapp disable <domain>` | Disable a web app | Token |
-| `pa webapp logs <domain>` | Show web app logs | Token |
+| `pa webapp delete <domain> [-f]` | Delete a web app | Token |
+| `pa webapp enable <domain>` | Enable a web app | Password |
+| `pa webapp disable <domain>` | Disable a web app | Password |
+| `pa webapp logs <domain> [-t] [-n]` | Show web app logs | Token |
 | `pa webapp ssl <domain>` | Show SSL certificate info | Token |
+| `pa webapp default-python [version]` | Get/set default Python version | Token |
 
 ### Deployment
 
 | Command | Description | Auth |
 |---------|-------------|------|
-| `pa deploy <dir>` | One-click deploy to default domain | Token |
-| `pa deploy <dir> --domain <domain>` | One-click deploy to custom domain | Token |
+| `pa deploy <dir> [--domain] [--python] [--dry-run]` | One-click deploy | Token |
 
 ### System Status
 
@@ -92,14 +100,15 @@ pa deploy ./my-site
 |---------|-------------|------|
 | `pa status cpu` | Show CPU usage | Token |
 | `pa status disk` | Show disk usage | Password |
+| `pa status system-image [image]` | Get/set system image | Token |
 
 ### Scheduled Tasks
 
 | Command | Description | Auth |
 |---------|-------------|------|
 | `pa tasks list` | List all scheduled tasks | Token |
-| `pa tasks create <command>` | Create a new scheduled task | Token |
-| `pa tasks delete <id>` | Delete a scheduled task | Token |
+| `pa tasks create <command> [--interval] [--hour] [--minute]` | Create a new scheduled task | Token |
+| `pa tasks delete <id> [-f]` | Delete a scheduled task | Token |
 | `pa tasks enable <id>` | Enable a scheduled task | Token |
 | `pa tasks disable <id>` | Disable a scheduled task | Token |
 
@@ -109,7 +118,15 @@ pa deploy ./my-site
 |---------|-------------|------|
 | `pa always-on list` | List all always-on tasks | Token |
 | `pa always-on create <command>` | Create a new always-on task | Token |
-| `pa always-on delete <id>` | Delete an always-on task | Token |
+| `pa always-on delete <id> [-f]` | Delete an always-on task | Token |
+| `pa always-on update <id> [-c] [-d] [-e/-E]` | Update an always-on task | Token |
+| `pa always-on restart <id>` | Restart an always-on task | Token |
+
+### Databases
+
+| Command | Description | Auth |
+|---------|-------------|------|
+| `pa databases mysql` | Show MySQL database info | Token |
 
 ## Typical Workflows
 
@@ -178,10 +195,11 @@ pa_cli/
 │   ├── webapps.py
 │   ├── system.py
 │   ├── tasks.py
-│   └── always_on.py
+│   ├── always_on.py
+│   └── databases.py
 ├── cli/           # CLI commands (Typer)
 │   ├── main.py
-│   ├── utils.py   # Shared utilities (get_client, _fix_remote_path)
+│   ├── utils.py
 │   ├── init_cmd.py
 │   ├── register_cmd.py
 │   ├── account_cmd.py
@@ -191,7 +209,8 @@ pa_cli/
 │   ├── deploy_cmd.py
 │   ├── status_cmd.py
 │   ├── tasks_cmd.py
-│   └── always_on_cmd.py
+│   ├── always_on_cmd.py
+│   └── databases_cmd.py
 ├── crawler/       # Browser simulation (Session auth)
 │   ├── account_crawler.py
 │   └── console_crawler.py
@@ -217,45 +236,14 @@ pytest
 # Run with verbose output
 pytest -v
 
+# Run with coverage
+pytest --cov=pa_cli --cov-report=html
+
 # Run specific test file
-pytest tests/test_account_crawler.py
+pytest tests/cli/test_webapps_cmd.py
 ```
 
-**Test coverage:** 267+ tests passing
-
-## Roadmap
-
-### ✅ Completed (P0/P1)
-
-- [x] Account configuration (`pa init`)
-- [x] Account registration (`pa register`)
-- [x] Auto-fetch API token (`pa account token`)
-- [x] Auto-extend expiry (`pa account extend`)
-- [x] File upload (`pa files upload`)
-- [x] File browsing (`pa files ls`)
-- [x] File download (`pa files download`)
-- [x] File deletion (`pa files rm`)
-- [x] Console management (`pa console *`)
-- [x] Web app management (`pa webapp *`)
-- [x] One-click deployment (`pa deploy`)
-- [x] Hit statistics (`pa webapp hits`)
-- [x] Multi-account management (`pa account switch`)
-- [x] CPU usage query (`pa status cpu`)
-- [x] Disk usage query (`pa status disk`)
-
-### ✅ Completed (P2)
-
-- [x] Log management (`pa webapp logs`)
-- [x] Webapp enable/disable (`pa webapp enable/disable`)
-- [x] Delete webapp (`pa webapp delete`)
-- [x] File sharing (`pa files share/unshare/share-status`)
-- [x] SSL info (`pa webapp ssl`)
-- [x] Scheduled tasks (`pa tasks`)
-- [x] Always-on tasks (`pa always-on`)
-
-### 🔲 Planned (P3)
-
-- [ ] Database info (`pa databases`) - API only supports listing, not create/delete
+**Test coverage:** 454 tests passing, 91% coverage
 
 ## License
 
