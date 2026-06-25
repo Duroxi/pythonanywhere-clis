@@ -44,3 +44,67 @@ def test_delete_always_on_task():
         client.delete("testuser", 1)
 
     mock_req.assert_called_once_with("DELETE", "/api/v0/user/{username}/always_on/{id}/", username="testuser", id=1)
+
+
+def test_update_always_on_task():
+    """update sends PATCH request."""
+    client = AlwaysOnClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        client.update("testuser", 1, command="echo updated", enabled=False)
+
+    mock_req.assert_called_once_with(
+        "PATCH",
+        "/api/v0/user/{username}/always_on/{id}/",
+        username="testuser",
+        id=1,
+        json={"command": "echo updated", "enabled": False},
+    )
+
+
+def test_update_always_on_task_partial():
+    """update with partial data sends PATCH request."""
+    client = AlwaysOnClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        client.update("testuser", 1, description="new description")
+
+    mock_req.assert_called_once_with(
+        "PATCH",
+        "/api/v0/user/{username}/always_on/{id}/",
+        username="testuser",
+        id=1,
+        json={"description": "new description"},
+    )
+
+
+def test_restart_always_on_task():
+    """restart sends POST request to restart endpoint."""
+    client = AlwaysOnClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        client.restart("testuser", 1)
+
+    mock_req.assert_called_once_with(
+        "POST",
+        "/api/v0/user/{username}/always_on/{id}/restart/",
+        username="testuser",
+        id=1,
+        json={},
+    )
+
+
+def test_restart_always_on_task_with_params():
+    """restart with params sends POST request with data."""
+    client = AlwaysOnClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        client.restart("testuser", 1, command="echo restarted")
+
+    mock_req.assert_called_once_with(
+        "POST",
+        "/api/v0/user/{username}/always_on/{id}/restart/",
+        username="testuser",
+        id=1,
+        json={"command": "echo restarted"},
+    )

@@ -601,3 +601,81 @@ def test_webapp_logs_with_lines():
     # Should only show last 5 lines
     lines = result.output.strip().split("\n")
     assert len(lines) == 5
+
+
+def test_webapp_default_python_get():
+    """webapp default-python shows current default version."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_default_python3_version.return_value = {
+            "version": "python310",
+            "available_versions": ["python38", "python39", "python310", "python311"],
+        }
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["default-python"])
+
+    assert result.exit_code == 0
+    assert "Current default Python version: python310" in result.output
+    assert "python38, python39, python310, python311" in result.output
+
+
+def test_webapp_default_python_set():
+    """webapp default-python sets default version."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["default-python", "python311"])
+
+    assert result.exit_code == 0
+    assert "Default Python version set to python311" in result.output
+    mock_client.set_default_python3_version.assert_called_once_with("u", "python311")
+
+
+def test_webapp_default_python_network_error():
+    """webapp default-python shows error on network failure."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_default_python3_version.side_effect = NetworkError("Connection failed")
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["default-python"])
+
+    assert result.exit_code == 1
+    assert "Network error" in result.output
+
+
+def test_webapp_default_python_auth_error():
+    """webapp default-python shows error on auth failure."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_default_python3_version.side_effect = AuthError("Invalid token")
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["default-python"])
+
+    assert result.exit_code == 1
+    assert "Auth error" in result.output
+
+
+def test_webapp_default_python_not_found():
+    """webapp default-python shows error when resource not found."""
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_default_python3_version.side_effect = NotFoundError("Not found")
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["default-python"])
+
+    assert result.exit_code == 1
+    assert "Not found" in result.output
+
+
+def test_webapp_default_python_api_error():
+    """webapp default-python shows error on API failure."""
+    from pa_cli.exceptions import APIError
+
+    with patch("pa_cli.cli.webapps_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_default_python3_version.side_effect = APIError("API error")
+        mock_get_client.return_value = ({"username": "u", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["default-python"])
+
+    assert result.exit_code == 1
+    assert "API error" in result.output

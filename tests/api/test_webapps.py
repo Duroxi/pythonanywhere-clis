@@ -112,3 +112,38 @@ def test_get_ssl_info():
         domain_name="testuser.pythonanywhere.com",
     )
     assert result["cert_type"] == "pythonanywhere-subdomain"
+
+
+def test_get_default_python3_version():
+    """get_default_python3_version returns version info."""
+    client = WebappsClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {
+        "version": "python310",
+        "available_versions": ["python38", "python39", "python310", "python311"],
+    }
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        result = client.get_default_python3_version("testuser")
+
+    mock_req.assert_called_once_with(
+        "GET",
+        "/api/v0/user/{username}/default_python3_version/",
+        username="testuser",
+    )
+    assert result["version"] == "python310"
+    assert len(result["available_versions"]) == 4
+
+
+def test_set_default_python3_version():
+    """set_default_python3_version sends PATCH request."""
+    client = WebappsClient(token="t", host="www.pythonanywhere.com")
+    mock_resp = MagicMock()
+    with patch.object(client, "_request", return_value=mock_resp) as mock_req:
+        client.set_default_python3_version("testuser", "python311")
+
+    mock_req.assert_called_once_with(
+        "PATCH",
+        "/api/v0/user/{username}/default_python3_version/",
+        username="testuser",
+        json={"version": "python311"},
+    )

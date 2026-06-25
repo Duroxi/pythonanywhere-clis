@@ -164,3 +164,83 @@ def test_status_disk_missing_fields():
 
     assert result.exit_code == 0
     assert "N/A" in result.output
+
+
+def test_status_system_image_get():
+    """status system-image shows current system image."""
+    with patch("pa_cli.cli.status_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_system_image.return_value = {
+            "system_image": "ubuntu-20.04",
+            "available_system_images": ["ubuntu-20.04", "ubuntu-22.04"],
+        }
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["system-image"])
+
+    assert result.exit_code == 0
+    assert "Current system image: ubuntu-20.04" in result.output
+    assert "ubuntu-20.04, ubuntu-22.04" in result.output
+
+
+def test_status_system_image_set():
+    """status system-image sets system image."""
+    with patch("pa_cli.cli.status_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["system-image", "ubuntu-22.04"])
+
+    assert result.exit_code == 0
+    assert "System image set to ubuntu-22.04" in result.output
+    mock_client.set_system_image.assert_called_once_with("testuser", "ubuntu-22.04")
+
+
+def test_status_system_image_network_error():
+    """status system-image shows error on network failure."""
+    from pa_cli.exceptions import NetworkError
+
+    with patch("pa_cli.cli.status_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_system_image.side_effect = NetworkError("Connection failed")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["system-image"])
+
+    assert result.exit_code == 1
+    assert "Network error" in result.output
+
+
+def test_status_system_image_auth_error():
+    """status system-image shows error on auth failure."""
+    with patch("pa_cli.cli.status_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_system_image.side_effect = AuthError("Invalid token")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["system-image"])
+
+    assert result.exit_code == 1
+    assert "Auth error" in result.output
+
+
+def test_status_system_image_not_found():
+    """status system-image shows error when resource not found."""
+    with patch("pa_cli.cli.status_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_system_image.side_effect = NotFoundError("Not found")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["system-image"])
+
+    assert result.exit_code == 1
+    assert "Not found" in result.output
+
+
+def test_status_system_image_api_error():
+    """status system-image shows error on API failure."""
+    from pa_cli.exceptions import APIError
+
+    with patch("pa_cli.cli.status_cmd.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.get_system_image.side_effect = APIError("API error")
+        mock_get_client.return_value = ({"username": "testuser", "token": "t", "host": "h"}, mock_client)
+        result = runner.invoke(app, ["system-image"])
+
+    assert result.exit_code == 1
+    assert "API error" in result.output
