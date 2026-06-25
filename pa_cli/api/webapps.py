@@ -69,3 +69,21 @@ class WebappsClient(BaseClient):
             domain_name=domain_name,
         )
         return response.json()
+
+    def get_default_python3_version(self, username: str) -> dict:
+        """Get default Python 3 version."""
+        response = self._request(
+            "GET",
+            "/api/v0/user/{username}/default_python3_version/",
+            username=username,
+        )
+        return response.json()
+
+    def set_default_python3_version(self, username: str, version: str) -> None:
+        """Set default Python 3 version."""
+        self._request(
+            "PATCH",
+            "/api/v0/user/{username}/default_python3_version/",
+            username=username,
+            json={"version": version},
+        )

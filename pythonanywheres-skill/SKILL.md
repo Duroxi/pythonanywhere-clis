@@ -85,11 +85,12 @@ pa account login
 | `pa account` | Account management | list, switch, remove, login, token, extend |
 | `pa files` | File operations | ls, upload, download, rm, share, unshare, share-status |
 | `pa console` | Console management | list, create, send, kill, activate, get-or-create |
-| `pa webapp` | Web app management | create, config, static, reload, hits, delete, enable, disable, logs, ssl |
+| `pa webapp` | Web app management | create, config, static, reload, hits, delete, enable, disable, logs, ssl, default-python |
 | `pa deploy` | One-click deployment | deploy (supports --dry-run, --domain, --python) |
-| `pa status` | System status | cpu, disk |
+| `pa status` | System status | cpu, disk, system-image |
 | `pa tasks` | Scheduled tasks | list, create, delete, enable, disable |
-| `pa always-on` | Always-on tasks | list, create, delete |
+| `pa always-on` | Always-on tasks | list, create, delete, update, restart |
+| `pa databases` | Database management | mysql |
 
 ## Common Workflows
 

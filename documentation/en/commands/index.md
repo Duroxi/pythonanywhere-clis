@@ -12,6 +12,7 @@
 | [Tasks](tasks.md) | Scheduled tasks |
 | [Always-on](always-on.md) | Always-on tasks |
 | [Webapp](webapp.md) | Web app management |
+| [Databases](databases.md) | Database management |
 
 ## Quick Reference
 

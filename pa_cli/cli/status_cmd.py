@@ -57,3 +57,34 @@ def disk():
     except NotFoundError as e:
         typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)
+
+
+@app.command("system-image")
+def system_image(
+    image: str = typer.Argument(None, help="System image to set"),
+):
+    """Get or set system image."""
+    try:
+        account, client = get_client(SystemClient)
+        if image:
+            client.set_system_image(account["username"], image)
+            typer.echo(f"System image set to {image}")
+        else:
+            data = client.get_system_image(account["username"])
+            current = data.get("system_image", "N/A")
+            available = data.get("available_system_images", [])
+            typer.echo(f"Current system image: {current}")
+            if available:
+                typer.echo(f"Available images: {', '.join(available)}")
+    except AuthError as e:
+        typer.echo(f"Auth error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"Network error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"Not found: {e}", err=True)
+        raise typer.Exit(code=1)
+    except APIError as e:
+        typer.echo(f"API error: {e}", err=True)
+        raise typer.Exit(code=1)

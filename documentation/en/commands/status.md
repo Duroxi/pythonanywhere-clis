@@ -89,3 +89,47 @@ Disk Usage:
 |---------|------|--------|-------------|
 | `pa status cpu` | Token | REST API | Real-time query |
 | `pa status disk` | Password | Crawler | Requires login |
+| `pa status system-image` | Token | REST API | Get/set system image |
+
+---
+
+## pa status system-image
+
+Get or set the system image.
+
+### Syntax
+
+```bash
+pa status system-image [<image>]
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `image` | No | System image to set |
+
+### Description
+
+If no image is specified, shows the current system image and available images. If an image is specified, sets the system image.
+
+### Examples
+
+**Get current system image:**
+
+```bash
+$ pa status system-image
+Current system image: ubuntu-20.04
+Available images: ubuntu-20.04, ubuntu-22.04
+```
+
+**Set system image:**
+
+```bash
+$ pa status system-image ubuntu-22.04
+System image set to ubuntu-22.04
+```
+
+### Prerequisites
+
+- Must run `pa init` first

@@ -135,3 +135,81 @@ Always-on task 789 deleted.
 | Use Cases | Webhook servers, chat bots | Data backups, report generation |
 | Account | Paid only | Free/Paid |
 | Command | `pa always-on` | `pa tasks` |
+
+---
+
+## pa always-on update
+
+Update an always-on task.
+
+### Syntax
+
+```bash
+pa always-on update <task_id> [--command <command>] [--description <description>] [--enabled/--disabled]
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `task_id` | Yes | Task ID |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-c`, `--command` | New command |
+| `-d`, `--description` | New description |
+| `-e`, `--enabled` | Enable task |
+| `-E`, `--disabled` | Disable task |
+
+### Examples
+
+**Update command:**
+
+```bash
+$ pa always-on update 789 --command "python /home/user/new_server.py"
+Always-on task 789 updated.
+```
+
+**Disable task:**
+
+```bash
+$ pa always-on update 789 --disabled
+Always-on task 789 updated.
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+- Requires paid account
+
+---
+
+## pa always-on restart
+
+Restart an always-on task.
+
+### Syntax
+
+```bash
+pa always-on restart <task_id>
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `task_id` | Yes | Task ID |
+
+### Example
+
+```bash
+$ pa always-on restart 789
+Always-on task 789 restarted.
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+- Requires paid account

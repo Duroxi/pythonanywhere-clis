@@ -13,6 +13,7 @@ from pa_cli.cli.register_cmd import app as register_app
 from pa_cli.cli.status_cmd import app as status_app
 from pa_cli.cli.tasks_cmd import app as tasks_app
 from pa_cli.cli.always_on_cmd import app as always_on_app
+from pa_cli.cli.databases_cmd import app as databases_app
 
 try:
     from importlib.metadata import version
@@ -63,6 +64,7 @@ app.add_typer(account_app, name="account", help="Account management")
 app.add_typer(status_app, name="status", help="Query system status and resource usage")
 app.add_typer(tasks_app, name="tasks", help="Manage scheduled tasks on PythonAnywhere")
 app.add_typer(always_on_app, name="always-on", help="Manage always-on tasks on PythonAnywhere")
+app.add_typer(databases_app, name="databases", help="Manage databases on PythonAnywhere")
 
 
 if __name__ == "__main__":

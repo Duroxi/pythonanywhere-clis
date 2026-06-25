@@ -12,6 +12,7 @@
 | [Tasks](tasks.md) | 定时任务 |
 | [Always-on](always-on.md) | 常驻任务 |
 | [Webapp](webapp.md) | Web 应用管理 |
+| [Databases](databases.md) | 数据库管理 |
 
 ## 快速参考
 

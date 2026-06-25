@@ -260,3 +260,34 @@ def ssl(
     except NotFoundError as e:
         typer.echo(f"Not found: {e}", err=True)
         raise typer.Exit(code=1)
+
+
+@app.command("default-python")
+def default_python(
+    version: str = typer.Argument(None, help="Python version to set (e.g. python310, python311)"),
+):
+    """Get or set default Python 3 version."""
+    try:
+        account, client = get_client(WebappsClient)
+        if version:
+            client.set_default_python3_version(account["username"], version)
+            typer.echo(f"Default Python version set to {version}")
+        else:
+            data = client.get_default_python3_version(account["username"])
+            current = data.get("version", "N/A")
+            available = data.get("available_versions", [])
+            typer.echo(f"Current default Python version: {current}")
+            if available:
+                typer.echo(f"Available versions: {', '.join(available)}")
+    except AuthError as e:
+        typer.echo(f"Auth error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"Network error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"Not found: {e}", err=True)
+        raise typer.Exit(code=1)
+    except APIError as e:
+        typer.echo(f"API error: {e}", err=True)
+        raise typer.Exit(code=1)

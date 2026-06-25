@@ -80,3 +80,62 @@ def delete(
     except APIError as e:
         typer.echo(f"API error: {e}", err=True)
         raise typer.Exit(code=1)
+
+
+@app.command()
+def update(
+    task_id: int = typer.Argument(..., help="Task ID to update"),
+    command: str = typer.Option(None, "--command", "-c", help="New command"),
+    description: str = typer.Option(None, "--description", "-d", help="New description"),
+    enabled: bool = typer.Option(None, "--enabled/--disabled", "-e/-E", help="Enable or disable task"),
+):
+    """Update an always-on task."""
+    try:
+        account, client = get_client(AlwaysOnClient)
+        kwargs = {}
+        if command is not None:
+            kwargs["command"] = command
+        if description is not None:
+            kwargs["description"] = description
+        if enabled is not None:
+            kwargs["enabled"] = enabled
+        if not kwargs:
+            typer.echo("Error: No update specified. Use --command, --description, or --enabled/--disabled.", err=True)
+            raise typer.Exit(code=1)
+        client.update(account["username"], task_id, **kwargs)
+        typer.echo(f"Always-on task {task_id} updated.")
+    except AuthError as e:
+        typer.echo(f"Auth error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"Network error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"Task not found: {e}", err=True)
+        raise typer.Exit(code=1)
+    except APIError as e:
+        typer.echo(f"API error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def restart(
+    task_id: int = typer.Argument(..., help="Task ID to restart"),
+):
+    """Restart an always-on task."""
+    try:
+        account, client = get_client(AlwaysOnClient)
+        client.restart(account["username"], task_id)
+        typer.echo(f"Always-on task {task_id} restarted.")
+    except AuthError as e:
+        typer.echo(f"Auth error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"Network error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NotFoundError as e:
+        typer.echo(f"Task not found: {e}", err=True)
+        raise typer.Exit(code=1)
+    except APIError as e:
+        typer.echo(f"API error: {e}", err=True)
+        raise typer.Exit(code=1)

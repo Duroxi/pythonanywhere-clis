@@ -20,3 +20,23 @@ class AlwaysOnClient(BaseClient):
     def delete(self, username: str, task_id: int) -> None:
         """Delete an always-on task."""
         self._request("DELETE", "/api/v0/user/{username}/always_on/{id}/", username=username, id=task_id)
+
+    def update(self, username: str, task_id: int, **kwargs) -> None:
+        """Update an always-on task."""
+        self._request(
+            "PATCH",
+            "/api/v0/user/{username}/always_on/{id}/",
+            username=username,
+            id=task_id,
+            json=kwargs,
+        )
+
+    def restart(self, username: str, task_id: int, **kwargs) -> None:
+        """Restart an always-on task."""
+        self._request(
+            "POST",
+            "/api/v0/user/{username}/always_on/{id}/restart/",
+            username=username,
+            id=task_id,
+            json=kwargs,
+        )

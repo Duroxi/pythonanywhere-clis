@@ -580,3 +580,47 @@ pa webapp disable myuser.pythonanywhere.com
 # 重新启用应用
 pa webapp enable myuser.pythonanywhere.com
 ```
+
+---
+
+## pa webapp default-python
+
+获取或设置默认的 Python 3 版本。
+
+### 语法
+
+```bash
+pa webapp default-python [<version>]
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `version` | 否 | 要设置的 Python 版本（如 python310, python311） |
+
+### 说明
+
+如果未指定版本，显示当前默认的 Python 版本和可用版本。如果指定了版本，设置默认的 Python 版本。
+
+### 示例
+
+**获取当前默认版本：**
+
+```bash
+$ pa webapp default-python
+Current default Python version: python310
+Available versions: python38, python39, python310, python311, python312
+```
+
+**设置默认版本：**
+
+```bash
+$ pa webapp default-python python311
+Default Python version set to python311
+```
+
+### 前置条件
+
+- 需先运行 `pa init` 完成账户配置
+

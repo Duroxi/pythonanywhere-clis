@@ -552,3 +552,47 @@ pa webapp disable myuser.pythonanywhere.com
 # Re-enable
 pa webapp enable myuser.pythonanywhere.com
 ```
+
+---
+
+## pa webapp default-python
+
+Get or set the default Python 3 version.
+
+### Syntax
+
+```bash
+pa webapp default-python [<version>]
+```
+
+### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `version` | No | Python version to set (e.g. python310, python311) |
+
+### Description
+
+If no version is specified, shows the current default Python version and available versions. If a version is specified, sets the default Python version.
+
+### Examples
+
+**Get current default version:**
+
+```bash
+$ pa webapp default-python
+Current default Python version: python310
+Available versions: python38, python39, python310, python311, python312
+```
+
+**Set default version:**
+
+```bash
+$ pa webapp default-python python311
+Default Python version set to python311
+```
+
+### Prerequisites
+
+- Must run `pa init` first
+

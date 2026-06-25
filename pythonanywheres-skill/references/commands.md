@@ -457,6 +457,29 @@ pa status disk
 
 ---
 
+### pa status system-image
+
+Get or set the system image.
+
+**Syntax:**
+```bash
+pa status system-image [<image>]
+```
+
+**Parameters:**
+- `image` (optional): System image to set
+
+**Examples:**
+```bash
+# Get current system image
+pa status system-image
+
+# Set system image
+pa status system-image ubuntu-22.04
+```
+
+---
+
 ## Tasks Commands
 
 ### pa tasks list
@@ -570,6 +593,48 @@ Delete an always-on task.
 **Syntax:**
 ```bash
 pa always-on delete <task_id> [-f | --force]
+```
+
+---
+
+### pa always-on update
+
+Update an always-on task.
+
+**Syntax:**
+```bash
+pa always-on update <task_id> [--command <command>] [--description <description>] [--enabled/--disabled]
+```
+
+**Options:**
+- `-c`, `--command`: New command
+- `-d`, `--description`: New description
+- `-e`, `--enabled`: Enable task
+- `-E`, `--disabled`: Disable task
+
+**Examples:**
+```bash
+# Update command
+pa always-on update 789 --command "python /home/user/new_server.py"
+
+# Disable task
+pa always-on update 789 --disabled
+```
+
+---
+
+### pa always-on restart
+
+Restart an always-on task.
+
+**Syntax:**
+```bash
+pa always-on restart <task_id>
+```
+
+**Example:**
+```bash
+pa always-on restart 789
 ```
 
 ---
@@ -738,3 +803,51 @@ pa webapp ssl [<domain_name>]
 - `pythonanywhere-subdomain` (free)
 - `lets-encrypt` (paid)
 - `custom` (paid)
+
+---
+
+### pa webapp default-python
+
+Get or set the default Python 3 version.
+
+**Syntax:**
+```bash
+pa webapp default-python [<version>]
+```
+
+**Parameters:**
+- `version` (optional): Python version to set (e.g. python310, python311)
+
+**Examples:**
+```bash
+# Get current default version
+pa webapp default-python
+
+# Set default version
+pa webapp default-python python311
+```
+
+---
+
+## Databases Commands
+
+### pa databases mysql
+
+Show MySQL database information.
+
+**Syntax:**
+```bash
+pa databases mysql
+```
+
+**Example:**
+```bash
+pa databases mysql
+```
+
+**Output:**
+```
+MySQL Databases:
+  myuser$mydb: 10.5 MB
+  myuser$testdb: 2.1 MB
+```

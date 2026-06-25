@@ -183,3 +183,81 @@ Always-on task 789 deleted.
 | 适用场景 | Webhook 服务器、聊天机器人 | 数据备份、报告生成 |
 | 账户要求 | 付费账户 | 免费/付费均可 |
 | 命令 | `pa always-on` | `pa tasks` |
+
+---
+
+## pa always-on update
+
+更新 Always-on 任务。
+
+### 语法
+
+```bash
+pa always-on update <task_id> [--command <command>] [--description <description>] [--enabled/--disabled]
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `task_id` | 是 | 任务 ID |
+
+### 选项
+
+| 选项 | 说明 |
+|------|------|
+| `-c`, `--command` | 新命令 |
+| `-d`, `--description` | 新描述 |
+| `-e`, `--enabled` | 启用任务 |
+| `-E`, `--disabled` | 禁用任务 |
+
+### 示例
+
+**更新命令：**
+
+```bash
+$ pa always-on update 789 --command "python /home/user/new_server.py"
+Always-on task 789 updated.
+```
+
+**禁用任务：**
+
+```bash
+$ pa always-on update 789 --disabled
+Always-on task 789 updated.
+```
+
+### 前置条件
+
+- 需先运行 `pa init` 完成账户配置
+- 需要付费账户
+
+---
+
+## pa always-on restart
+
+重启 Always-on 任务。
+
+### 语法
+
+```bash
+pa always-on restart <task_id>
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `task_id` | 是 | 任务 ID |
+
+### 示例
+
+```bash
+$ pa always-on restart 789
+Always-on task 789 restarted.
+```
+
+### 前置条件
+
+- 需先运行 `pa init` 完成账户配置
+- 需要付费账户

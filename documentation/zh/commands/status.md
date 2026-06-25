@@ -109,3 +109,48 @@ Auth error: Password not found in config.
 |------|---------|---------|------|
 | `pa status cpu` | Token | REST API | 实时查询 |
 | `pa status disk` | 密码 | 爬虫 | 需要登录 |
+| `pa status system-image` | Token | REST API | 获取/设置系统镜像 |
+
+---
+
+## pa status system-image
+
+获取或设置系统镜像。
+
+### 语法
+
+```bash
+pa status system-image [<image>]
+```
+
+### 参数
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `image` | 否 | 要设置的系统镜像 |
+
+### 说明
+
+如果未指定镜像，显示当前系统镜像和可用镜像。如果指定了镜像，设置系统镜像。
+
+### 示例
+
+**获取当前系统镜像：**
+
+```bash
+$ pa status system-image
+Current system image: ubuntu-20.04
+Available images: ubuntu-20.04, ubuntu-22.04
+```
+
+**设置系统镜像：**
+
+```bash
+$ pa status system-image ubuntu-22.04
+System image set to ubuntu-22.04
+```
+
+### 前置条件
+
+- 需先运行 `pa init` 完成账户配置
+
