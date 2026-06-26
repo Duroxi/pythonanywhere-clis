@@ -109,6 +109,12 @@ def _decrypt_account(account: dict) -> dict:
             try:
                 account["password"] = _decrypt(account["password_enc"])
             except Exception:
+                import typer
+                typer.echo(
+                    f"Warning: Failed to decrypt password for account '{account.get('username', 'unknown')}'. "
+                    "Please re-save password with: pa account login",
+                    err=True,
+                )
                 account["password"] = None
         del account["password_enc"]
     # Keep legacy plaintext password as-is (already in account["password"])
