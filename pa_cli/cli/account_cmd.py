@@ -58,9 +58,26 @@ def list_accounts():
 
 
 @app.command()
-def login():
-    """Store password for the current account."""
-    password = typer.prompt("Password", hide_input=True)
+def login(
+    password: str = typer.Option(None, "--password", "-p", help="Account password (will prompt if not provided)"),
+):
+    """Store password for the current account. Verifies password by attempting login before saving."""
+    if password is None:
+        password = typer.prompt("Password", hide_input=True)
+
+    # Verify password by attempting login
+    try:
+        crawler = AccountCrawler()
+        crawler.login(password=password)
+        typer.echo(f"Login successful for account '{crawler.username}'.")
+    except AuthError as e:
+        typer.echo(f"Login failed: {e}", err=True)
+        raise typer.Exit(code=1)
+    except NetworkError as e:
+        typer.echo(f"Network error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+    # Only save if login succeeded
     Config.save(password=password)
     typer.echo("Password saved successfully.")
 
