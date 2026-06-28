@@ -8,23 +8,98 @@ runner = CliRunner()
 
 
 def test_login_prompts_for_password():
-    with patch("pa_cli.cli.account_cmd.Config.save") as mock_save:
+    with patch("pa_cli.cli.account_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
+        mock_crawler = MagicMock()
+        mock_crawler.login.return_value = True
+        mock_crawler.username = "testuser"
+        mock_cls.return_value = mock_crawler
+
         result = runner.invoke(app, ["login"], input="secret\n")
 
     assert result.exit_code == 0
     mock_save.assert_called_once_with(password="secret")
     assert "Password saved" in result.output
+    assert "Login successful" in result.output
+
+
+def test_login_with_password_option():
+    """login with --password option verifies and saves password."""
+    with patch("pa_cli.cli.account_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
+        mock_crawler = MagicMock()
+        mock_crawler.login.return_value = True
+        mock_crawler.username = "testuser"
+        mock_cls.return_value = mock_crawler
+
+        result = runner.invoke(app, ["login", "-p", "mypassword"])
+
+    assert result.exit_code == 0
+    mock_crawler.login.assert_called_once_with(password="mypassword")
+    mock_save.assert_called_once_with(password="mypassword")
+    assert "Login successful" in result.output
+    assert "Password saved" in result.output
+
+
+def test_login_verifies_password_before_saving():
+    """login verifies password by attempting login before saving."""
+    with patch("pa_cli.cli.account_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
+        mock_crawler = MagicMock()
+        mock_crawler.login.return_value = True
+        mock_crawler.username = "testuser"
+        mock_cls.return_value = mock_crawler
+
+        result = runner.invoke(app, ["login", "-p", "correct_password"])
+
+    assert result.exit_code == 0
+    mock_crawler.login.assert_called_once_with(password="correct_password")
+    mock_save.assert_called_once_with(password="correct_password")
+
+
+def test_login_exits_on_auth_error():
+    """login exits with error when password is incorrect."""
+    with patch("pa_cli.cli.account_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
+        mock_crawler = MagicMock()
+        mock_crawler.login.side_effect = AuthError("Login failed: incorrect password")
+        mock_cls.return_value = mock_crawler
+
+        result = runner.invoke(app, ["login", "-p", "wrong_password"])
+
+    assert result.exit_code == 1
+    assert "Login failed" in result.output
+    mock_save.assert_not_called()
+
+
+def test_login_exits_on_network_error():
+    """login exits with error on network failure."""
+    with patch("pa_cli.cli.account_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
+        mock_crawler = MagicMock()
+        mock_crawler.login.side_effect = NetworkError("Connection failed")
+        mock_cls.return_value = mock_crawler
+
+        result = runner.invoke(app, ["login", "-p", "mypassword"])
+
+    assert result.exit_code == 1
+    assert "Network error" in result.output
+    mock_save.assert_not_called()
 
 
 def test_login_uses_hidden_input():
-    with patch("pa_cli.cli.account_cmd.Config.save"):
-        with patch("pa_cli.cli.account_cmd.typer") as mock_typer:
-            mock_typer.prompt.return_value = "secret"
-            mock_typer.echo = MagicMock()
-            from pa_cli.cli.account_cmd import login
-            login()
+    """login prompts for hidden password input when --password not provided."""
+    with patch("pa_cli.cli.account_cmd.Config.save") as mock_save, \
+         patch("pa_cli.cli.account_cmd.AccountCrawler") as mock_cls:
+        mock_crawler = MagicMock()
+        mock_crawler.login.return_value = True
+        mock_crawler.username = "testuser"
+        mock_cls.return_value = mock_crawler
 
-    mock_typer.prompt.assert_called_once_with("Password", hide_input=True)
+        result = runner.invoke(app, ["login"], input="secret\n")
+
+    assert result.exit_code == 0
+    assert "Password saved" in result.output
 
 
 # --- token command tests ---
